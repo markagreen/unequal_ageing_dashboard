@@ -28,7 +28,7 @@ try:
             return 'lightgrey'  # Use light grey for NaN values
         else:
             # Normalize the value for better color mapping
-            normalized_value = (value - merged_gdf[data_column].min()) / (merged_gdf[data_column].max() - merged_gdf[data_column].min())
+            normalized_value = (value - gdf[data_column].min()) / (gdf[data_column].max() - gdf[data_column].min())
             
             # Create a color palette (3 colors for low, medium, high)
             colors = plt.cm.get_cmap('Set2', 3)  # Using a colorblind-friendly palette
@@ -39,7 +39,7 @@ try:
 
     # Add the GeoJSON layer to the map with the dynamic style function
     folium.GeoJson(
-        merged_gdf,
+        gdf,
         name="Census Data",
         style_function=lambda feature: {
             'fillColor': color_function(feature['properties'][data_column]),
