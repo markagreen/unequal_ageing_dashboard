@@ -54,6 +54,23 @@ try:
             'fillOpacity': 0.7,
         }
     ).add_to(m)
+
+    # Add a color legend to the map
+    def add_color_legend(map_object):
+        legend_html = """
+        <div style="position: fixed; 
+                    bottom: 50px; left: 50px; width: 150px; height: auto; 
+                    background: white; z-index:9999; font-size:14px;
+                    border:2px solid grey;">
+            <div style="text-align: center; font-weight: bold;">Legend</div>
+            <div><i style="background: #66c2a5;"></i> Low</div>
+            <div><i style="background: #fc8d62;"></i> Medium</div>
+            <div><i style="background: #8da0cb;"></i> High</div>
+        </div>
+        """
+        map_object.get_root().html.add_child(folium.Element(legend_html))
+
+add_color_legend(m)
     
     # Display the map in Streamlit
     st_folium(m, width=700, height=500)
