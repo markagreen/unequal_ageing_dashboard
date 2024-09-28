@@ -43,10 +43,16 @@ m = folium.Map(location=[merged_gdf.geometry.centroid.y.mean(), merged_gdf.geome
 
 # Define a color function that maps data values to colors using quintiles
 def assign_colors(value, bins, colors):
+    # Convert value to a float if it is a string
+    try:
+        value = float(value)
+    except (ValueError, TypeError):
+        return 'gray'  # Default color for non-numeric values
+    
     for i in range(len(bins) - 1):
         if bins[i] <= value < bins[i + 1]:
             return colors[i]
-    return 'lightgrey'  # For NaN values or out of bounds
+    return 'gray'  # Default color for values outside the bins
 
 # Create quintile bins
 bins = pd.qcut(merged_gdf[data_column].dropna(), 5, duplicates='drop').cat.categories
