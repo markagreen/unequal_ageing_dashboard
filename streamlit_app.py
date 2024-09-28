@@ -22,9 +22,6 @@ st.write("Invalid Geometries:", invalid_geometries)
 try:
     gdf = gpd.read_file(geojson_file)
 
-    if gdf.crs is not None:
-    gdf = gdf.to_crs(epsg=4326)
-
     # Display a simple dataframe preview
     #st.write("Data Preview:")
     # st.write(gdf.head())
