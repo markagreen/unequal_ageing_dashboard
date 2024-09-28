@@ -3,5 +3,5 @@ streamlit-folium
 geopandas
 pandas
 folium
-matplotlib.pyplot
+matplotlib
 numpy
