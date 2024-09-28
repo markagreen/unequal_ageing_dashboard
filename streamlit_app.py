@@ -18,9 +18,6 @@ gdf = gpd.read_file("vector_files/lsoas.geojson")
 ethnicity_df = pd.read_csv("data/ethnicity_lsoa.csv")
 ageing_df = pd.read_csv("data/age_band_lsoa.csv")
 
-# Specify the path to the GeoJSON file
-# geojson_file = "lsoas_dashboard.geojson"  # Make sure this file is in the same directory as your script
-
 # Sidebar for user selection
 st.sidebar.header("Data Selection")
 data_choice = st.sidebar.selectbox("Select data to visualize", ("Ethnicity Data", "Ageing Data"))
@@ -32,7 +29,7 @@ else:
     df = ageing_df
 
 # Merge GeoDataFrame with the selected DataFrame based on a common key
-common_key = "lsoa11cd"  # Change this to the actual key in your data
+common_key = "lsoa21cd"  # Change this to the actual key in your data
 merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
 
 # Ask user to select the column for displaying data
