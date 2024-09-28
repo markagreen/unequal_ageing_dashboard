@@ -31,10 +31,6 @@ else:
 common_key = "lsoa21cd"  # Change this to the actual key in your data
 merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
 
-# Merge the GeoDataFrame with the CSV data
-common_key = "area_code"  # Ensure this is a column in both GeoJSON and CSV
-merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
-
 # Ensure the data column is numeric (convert if necessary)
 merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
 
