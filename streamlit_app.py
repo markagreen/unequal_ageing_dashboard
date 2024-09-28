@@ -18,14 +18,10 @@ try:
     #st.write("Data Preview:")
     # st.write(gdf.head())
 
-    # Read the uploaded GeoJSON file
-        gdf = gpd.read_file(uploaded_file)
-
-        # Check if GeoDataFrame loaded correctly
-        st.write("GeoDataFrame:")
-        st.write(gdf.head())  # Show the first few rows
-        st.write("GeoDataFrame Columns:", gdf.columns.tolist())
-
+    # Check if GeoDataFrame loaded correctly
+    st.write("GeoDataFrame:")
+    st.write(gdf.head())  # Show the first few rows
+    st.write("GeoDataFrame Columns:", gdf.columns.tolist())
 
     # Ask user to select the column for displaying data
     data_column = st.selectbox('Select a column to display on the map', gdf.columns)
