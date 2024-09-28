@@ -19,10 +19,10 @@ ageing_df = pd.read_csv("data/age_band_lsoa.csv")
 
 # Sidebar for user selection
 st.sidebar.header("Data Selection")
-data_choice = st.sidebar.selectbox("Select data to visualize", ("Ethnicity Data", "Ageing Data"))
+data_choice = st.sidebar.selectbox("Select data to visualize", ("Ethnicity", "Ageing"))
 
 # Select the appropriate DataFrame based on user selection
-if data_choice == "Ethnicity Data":
+if data_choice == "Ethnicity":
     df = ethnicity_df
 else:
     df = ageing_df
