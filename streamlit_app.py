@@ -14,7 +14,7 @@ from streamlit_folium import st_folium
 st.title("Ethnicity and Unequal Ageing Dashboard")
 
 # Specify the path to the GeoJSON file
-geojson_file = "/Users/markagreen/Desktop/eua_dashboard/outputareas.geojson"  # Make sure this file is in the same directory as your script
+geojson_file = "/Users/markagreen/Desktop/eua_dashboard/lsoas_dashboard.geojson"  # Make sure this file is in the same directory as your script
 
 # Try to read the GeoJSON file using geopandas
 try:
