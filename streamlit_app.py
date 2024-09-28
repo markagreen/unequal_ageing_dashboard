@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Create a mapping dashboard in streamlit
-
-"""
-
 # Libraries
 import streamlit as st
 import geopandas as gpd
@@ -16,9 +10,20 @@ st.title("Ethnicity and Unequal Ageing Dashboard")
 # Specify the path to the GeoJSON file
 geojson_file = "lsoas_dashboard.geojson"  # Make sure this file is in the same directory as your script
 
+# Check if GeoDataFrame loaded correctly
+st.write("GeoDataFrame:")
+st.write(gdf.head())  # Show the first few rows
+st.write("GeoDataFrame Columns:", gdf.columns.tolist())
+
+invalid_geometries = gdf[~gdf.is_valid]
+st.write("Invalid Geometries:", invalid_geometries)
+
 # Try to read the GeoJSON file using geopandas
 try:
     gdf = gpd.read_file(geojson_file)
+
+    if gdf.crs is not None:
+    gdf = gdf.to_crs(epsg=4326)
 
     # Display a simple dataframe preview
     #st.write("Data Preview:")
