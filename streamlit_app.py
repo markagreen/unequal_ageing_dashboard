@@ -31,8 +31,9 @@ else:
 common_key = "lsoa21cd"  # Change this to the actual key in your data
 merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
 
-# Ask user to select the column for displaying data
-data_column = st.selectbox('Select a column to display on the map', merged_gdf.columns)
+# Merge the GeoDataFrame with the CSV data
+common_key = "area_code"  # Ensure this is a column in both GeoJSON and CSV
+merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
 
 # Ensure the data column is numeric (convert if necessary)
 merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
@@ -41,48 +42,53 @@ merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce'
 merged_gdf = merged_gdf.dropna(subset=[data_column])
 merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
 
-# Create a colormap (continuous color scale)
-min_value = merged_gdf[data_column].min()
-max_value = merged_gdf[data_column].max()
+# Calculate centroids and filter out any rows with missing centroids
+valid_centroids = merged_gdf.geometry.centroid.dropna()
 
-# Use a linear colormap (e.g., Viridis)
-colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
+if valid_centroids.empty:
+    st.error("No valid geometries available for mapping.")
+else:
+    # Create a colormap (continuous color scale)
+    min_value = merged_gdf[data_column].min()
+    max_value = merged_gdf[data_column].max()
 
-# Calculate the centroid of valid geometries for the map center
-centroid_lat = merged_gdf.geometry.centroid.y.mean()
-centroid_lon = merged_gdf.geometry.centroid.x.mean()
+    # Use a linear colormap (e.g., Viridis)
+    colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
 
-# Create a base folium map
-m = folium.Map(location=[centroid_lat, centroid_lon], zoom_start=10)
+    # Calculate the centroid of valid geometries for the map center
+    centroid_lat = valid_centroids.y.mean()
+    centroid_lon = valid_centroids.x.mean()
 
-# Function to assign colors using the colormap
-def style_function(feature):
-    value = feature['properties'][data_column]
-    if pd.notnull(value):
-        return {
-            'fillColor': colormap(value),
-            'color': 'black',
-            'weight': 0.5,
-            'fillOpacity': 0.7,
-        }
-    else:
-        return {
-            'fillColor': 'gray',
-            'color': 'black',
-            'weight': 0.5,
-            'fillOpacity': 0.7,
-        }
+    # Create a base folium map
+    m = folium.Map(location=[centroid_lat, centroid_lon], zoom_start=10)
 
-# Add the GeoJSON layer to the map
-folium.GeoJson(merged_gdf,
-               name="Census Data",
-               style_function=style_function).add_to(m)
+    # Function to assign colors using the colormap
+    def style_function(feature):
+        value = feature['properties'][data_column]
+        if pd.notnull(value):
+            return {
+                'fillColor': colormap(value),
+                'color': 'black',
+                'weight': 0.5,
+                'fillOpacity': 0.7,
+            }
+        else:
+            return {
+                'fillColor': 'gray',
+                'color': 'black',
+                'weight': 0.5,
+                'fillOpacity': 0.7,
+            }
 
-# Add the colormap as a legend to the map
-colormap.caption = f"{data_column} Values"
-m.add_child(colormap)
+    # Add the GeoJSON layer to the map
+    folium.GeoJson(merged_gdf,
+                   name="Census Data",
+                   style_function=style_function).add_to(m)
 
-# Display the map in Streamlit
-st_folium(m, width=700, height=500)
+    # Add the colormap as a legend to the map
+    colormap.caption = f"{data_column} Values"
+    m.add_child(colormap)
 
+    # Display the map in Streamlit
+    st_folium(m, width=700, height=500)
 
