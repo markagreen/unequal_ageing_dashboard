@@ -17,7 +17,7 @@ try:
     merged_gdf = gpd.read_file(geojson_file)
 
     # Ask user to select the column for displaying data
-    data_column = st.selectbox('Select a column to display on the map', gdf.columns)
+    data_column = st.selectbox('Select a column to display on the map', merged_gdf.columns)
 
     # Add this before creating the folium map
     # Convert the selected column to numeric, coercing errors to NaN
