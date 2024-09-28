@@ -6,6 +6,7 @@ import folium
 from streamlit_folium import st_folium
 import matplotlib.pyplot as plt 
 import numpy as np
+import branca.colormap as cm
 
 # Title of the app
 st.title("Ethnicity and Unequal Ageing Dashboard")
