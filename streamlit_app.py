@@ -36,8 +36,11 @@ merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
 # Ask user to select the column for displaying data
 data_column = st.selectbox('Select a column to display on the map', merged_gdf.columns)
 
-# Convert the selected column to numeric, coercing errors to NaN
+# Ensure the data column is numeric (convert if necessary)
 merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
+
+# Remove rows with NaN values in the selected data column
+merged_gdf = merged_gdf.dropna(subset=[data_column])
 
 # Create a colormap (continuous color scale)
 min_value = merged_gdf[data_column].min()
