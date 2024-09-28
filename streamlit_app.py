@@ -37,7 +37,7 @@ try:
             normalized_value = (value - merged_gdf[data_column].min()) / (merged_gdf[data_column].max() - merged_gdf[data_column].min())
             
             # Create a color palette (3 colors for low, medium, high)
-            colors = plt.cm.get_cmap('Set2', 3)  # Using a colorblind-friendly palette
+            colors = plt.cm.get_cmap('Set2', 10)  # Using a colorblind-friendly palette
             color = colors(int(normalized_value * (colors.N - 1)))  # Get color from the palette
             
             # Convert RGBA to hex
@@ -55,17 +55,16 @@ try:
         }
     ).add_to(m)
 
-    # Add a color legend to the map
     def add_color_legend(map_object):
         legend_html = """
         <div style="position: fixed; 
                     bottom: 50px; left: 50px; width: 150px; height: auto; 
-                    background: white; z-index:9999; font-size:14px;
-                    border:2px solid grey;">
+                    background: white; z-index:9999; font-size:14px; 
+                    border:2px solid grey; padding: 10px;">
             <div style="text-align: center; font-weight: bold;">Legend</div>
-            <div><i style="background: #66c2a5;"></i> Low</div>
-            <div><i style="background: #fc8d62;"></i> Medium</div>
-            <div><i style="background: #8da0cb;"></i> High</div>
+            <div><i style="background: #66c2a5; width: 20px; height: 20px; display: inline-block;"></i> Low</div>
+            <div><i style="background: #fc8d62; width: 20px; height: 20px; display: inline-block;"></i> Medium</div>
+            <div><i style="background: #8da0cb; width: 20px; height: 20px; display: inline-block;"></i> High</div>
         </div>
         """
         map_object.get_root().html.add_child(folium.Element(legend_html))
