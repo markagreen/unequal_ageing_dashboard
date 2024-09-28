@@ -43,8 +43,8 @@ merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce'
 min_value = merged_gdf[data_column].min()
 max_value = merged_gdf[data_column].max()
 
-# Use a linear colormap (e.g., Viridis, Plasma, etc.)
-colormap = cm.linear.Viridis_09.scale(min_value, max_value)
+# Use a linear colormap (e.g., Viridis)
+colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
 
 # Create a base folium map
 m = folium.Map(location=[merged_gdf.geometry.centroid.y.mean(), merged_gdf.geometry.centroid.x.mean()],
@@ -74,7 +74,8 @@ folium.GeoJson(merged_gdf,
                style_function=style_function).add_to(m)
 
 # Add the colormap as a legend to the map
-colormap.add_to(m)
+colormap.caption = f"{data_column} Values"
+m.add_child(colormap)
 
 # Display the map in Streamlit
 st_folium(m, width=700, height=500)
