@@ -31,12 +31,12 @@ else:
 common_key = "lsoa21cd"  # Change this to the actual key in your data
 merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
 
-# Ensure the data column is numeric (convert if necessary)
-merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
-
 # Select the column for displaying data
 # Ensure that the user selects the column before it's used
 data_column = st.selectbox('Select a column to display on the map', merged_gdf.columns)
+
+# Ensure the data column is numeric (convert if necessary)
+merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
 
 # Remove rows with NaN values in the selected data column or missing geometries
 merged_gdf = merged_gdf.dropna(subset=[data_column])
