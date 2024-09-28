@@ -70,7 +70,7 @@ try:
         """
         map_object.get_root().html.add_child(folium.Element(legend_html))
 
-add_color_legend(m)
+    add_color_legend(m)
     
     # Display the map in Streamlit
     st_folium(m, width=700, height=500)
