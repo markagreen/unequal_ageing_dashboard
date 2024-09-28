@@ -4,6 +4,8 @@ import geopandas as gpd
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
+import matplotlib.pyplot as plt 
+import numpy as np
 
 # Title of the app
 st.title("Ethnicity and Unequal Ageing Dashboard")
