@@ -1,11 +1,9 @@
 # Libraries
 import streamlit as st
 import geopandas as gpd
-import pandas as pd
 import folium
+import pandas as pd
 from streamlit_folium import st_folium
-import matplotlib.pyplot as plt 
-import numpy as np
 import branca.colormap as cm
 
 # Title of the app
@@ -39,8 +37,9 @@ data_column = st.selectbox('Select a column to display on the map', merged_gdf.c
 # Ensure the data column is numeric (convert if necessary)
 merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
 
-# Remove rows with NaN values in the selected data column
+# Remove rows with NaN values in the selected data column or missing geometries
 merged_gdf = merged_gdf.dropna(subset=[data_column])
+merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
 
 # Create a colormap (continuous color scale)
 min_value = merged_gdf[data_column].min()
@@ -49,9 +48,12 @@ max_value = merged_gdf[data_column].max()
 # Use a linear colormap (e.g., Viridis)
 colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
 
+# Calculate the centroid of valid geometries for the map center
+centroid_lat = merged_gdf.geometry.centroid.y.mean()
+centroid_lon = merged_gdf.geometry.centroid.x.mean()
+
 # Create a base folium map
-m = folium.Map(location=[merged_gdf.geometry.centroid.y.mean(), merged_gdf.geometry.centroid.x.mean()],
-               zoom_start=10)
+m = folium.Map(location=[centroid_lat, centroid_lon], zoom_start=10)
 
 # Function to assign colors using the colormap
 def style_function(feature):
