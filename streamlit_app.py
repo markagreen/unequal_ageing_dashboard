@@ -50,9 +50,16 @@ data_column = st.selectbox('Select a column to display on the map', merged_gdf.c
 # Ensure the data column is numeric (convert if necessary)
 merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
 
+# Check for non-null values in the selected data column
+non_null_values = merged_gdf[data_column].notnull().sum()
+st.write(f"Number of non-null values in {data_column}: {non_null_values}")
+
 # Remove rows with NaN values in the selected data column or missing geometries
 merged_gdf = merged_gdf.dropna(subset=[data_column])
 merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
+
+# Print unique values for debugging
+st.write(f"Unique values in {data_column}: {merged_gdf[data_column].unique()}")
 
 # Dynamically calculate min and max values for the selected data column
 min_value2 = merged_gdf[data_column].min()
