@@ -62,9 +62,9 @@ max_value = merged_gdf[data_column].max()
 # Use a linear colormap (e.g., Viridis)
 colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
 
-# Calculate the centroid of valid geometries for the map center
-centroid_lat = valid_centroids.y.mean()
-centroid_lon = valid_centroids.x.mean()
+# Calculate the centroid for the map center
+centroid_lat = '53.394418'
+centroid_lon = '-1.429725'
 
 # Create a base folium map
 m = folium.Map(location=[centroid_lat, centroid_lon], zoom_start=10)
