@@ -37,7 +37,10 @@ merged_gdf = merged_gdf.dropna(subset=['geometry']) # Check geometries are valid
 # Exclude 'lsoa21cd' from the list of columns
 data_columns = merged_gdf.columns.tolist()
 data_columns.remove('lsoa21cd')  # Remove 'lsoa21cd' from the list
-data_columns.remove('geometry')  # Remove 'lsoa21cd' from the list
+data_columns.remove('geometry')  # Remove 'geometry' from the list
+if 'Unnamed: 0' in data_columns: 
+    data_columns.remove('Unnamed: 0')  # Remove 'Unnamed: 0' from the list if it exists (only exists in ethnicity data so do this way to avoid error in ageing dataset
+
 
 # Select the column for displaying data
 # Ensure that the user selects the column before it's used
