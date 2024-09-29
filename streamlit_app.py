@@ -28,8 +28,14 @@ data_choice = st.sidebar.selectbox("Select data to visualize", ("Ethnicity", "Ag
 # Select the appropriate DataFrame based on user selection
 if data_choice == "Ethnicity":
     df = ethnicity_df
+    # Create a colormap (continuous color scale)
+    min_value = 0
+    max_value = 100
 else:
     df = ageing_df
+    # Create a colormap (continuous color scale)
+    min_value = 0
+    max_value = 67
 
 # Merge GeoDataFrame with the selected DataFrame based on a common key
 common_key = "lsoa21cd"  # Change this to the actual key in your data
@@ -47,17 +53,6 @@ merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce'
 # Remove rows with NaN values in the selected data column or missing geometries
 merged_gdf = merged_gdf.dropna(subset=[data_column])
 merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
-
-# Calculate centroids and filter out any rows with missing centroids
-#valid_centroids = merged_gdf.geometry.centroid.dropna()
-
-#if valid_centroids.empty:
-#    st.error("No valid geometries available for mapping.")
-#else:
-    
-# Create a colormap (continuous color scale)
-min_value = 0
-max_value = 100
 
 # Use a linear colormap (e.g., Viridis)
 colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
