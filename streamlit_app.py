@@ -8,10 +8,7 @@ import branca.colormap as cm
 
 # Title of the app
 st.title("Ethnicity and Unequal Ageing in Rotherham and Sheffield")
-st.write("A mapping dashboard that presents data on ethnicity and ageing in Sheffield and Rotherham")
-
-import os
-st.write("Current working directory:", os.getcwd())
+st.write("A mapping dashboard that presents data on ethnicity and ageing in Sheffield and Rotherham. The dashboard uses data from the 2021 Census.")
 
 # Load LSOA vector files
 gdf = gpd.read_file("lsoas.geojson")
@@ -37,6 +34,9 @@ else:
     min_value = 0
     max_value = 67
 
+st.write(min_value)
+st.write(max_value)
+
 # Merge GeoDataFrame with the selected DataFrame based on a common key
 common_key = "lsoa21cd"  # Change this to the actual key in your data
 # merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
@@ -53,6 +53,13 @@ merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce'
 # Remove rows with NaN values in the selected data column or missing geometries
 merged_gdf = merged_gdf.dropna(subset=[data_column])
 merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
+
+# Dynamically calculate min and max values for the selected data column
+min_value2 = merged_gdf[data_column].min()
+max_value2 = merged_gdf[data_column].max()
+
+st.write(min_value2)
+st.write(max_value2)
 
 # Use a linear colormap (e.g., Viridis)
 colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
@@ -88,7 +95,7 @@ folium.GeoJson(merged_gdf,
                 style_function=style_function).add_to(m)
 
 # Add the colormap as a legend to the map
-colormap.caption = f"{data_column} Values"
+colormap.caption = f"{data_column} Percentage"
 m.add_child(colormap)
 
 # Display the map in Streamlit
