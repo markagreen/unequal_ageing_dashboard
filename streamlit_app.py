@@ -28,9 +28,6 @@ if data_choice == "Ethnicity":
 else:
     df = ageing_df
 
-st.write(min_value)
-st.write(max_value)
-
 # Merge GeoDataFrame with the selected DataFrame based on a common key
 common_key = "lsoa21cd"  # Change this to the actual key in your data
 # merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
