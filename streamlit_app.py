@@ -36,7 +36,7 @@ merged_gdf = merged_gdf.dropna(subset=['geometry']) # Check geometries are valid
 
 # Exclude 'lsoa21cd' from the list of columns
 data_columns = merged_gdf.columns.tolist()
-data_columns.remove('lsoa21cd')  # Remove 'lsoa21cd' from the list
+data_columns.remove('lsoa21cd', 'geometry')  # Remove 'lsoa21cd' from the list
 
 # Select the column for displaying data
 # Ensure that the user selects the column before it's used
@@ -52,9 +52,6 @@ merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
 # Dynamically calculate min and max values for the selected data column
 min_value = merged_gdf[data_column].min()
 max_value = merged_gdf[data_column].max()
-
-st.write(min_value2)
-st.write(max_value2)
 
 # Use a linear colormap (e.g., Viridis)
 colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
