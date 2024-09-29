@@ -7,7 +7,7 @@ from streamlit_folium import st_folium
 import branca.colormap as cm
 
 # Title of the app
-st.title("Ethnicity and Unequal Ageing Dashboard")
+st.title("Ethnicity and Unequal Ageing in Rotherham and Sheffield")
 st.write("A mapping dashboard that presents data on ethnicity and ageing in Sheffield and Rotherham")
 
 # Load LSOA vector files
@@ -29,7 +29,8 @@ else:
 
 # Merge GeoDataFrame with the selected DataFrame based on a common key
 common_key = "lsoa21cd"  # Change this to the actual key in your data
-merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
+# merged_gdf = gdf.merge(df, how="left", left_on=common_key, right_on=common_key)
+merged_gdf = gdf.merge(df, on='lsoa21cd', how='left') # Merge
 
 # Select the column for displaying data
 # Ensure that the user selects the column before it's used
