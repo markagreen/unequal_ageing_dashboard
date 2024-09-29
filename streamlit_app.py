@@ -37,6 +37,7 @@ merged_gdf = merged_gdf.dropna(subset=['geometry']) # Check geometries are valid
 # Exclude 'lsoa21cd' from the list of columns
 data_columns = merged_gdf.columns.tolist()
 data_columns.remove('lsoa21cd')  # Remove 'lsoa21cd' from the list
+data_columns.remove('geometry')  # Remove 'lsoa21cd' from the list
 
 # Select the column for displaying data
 # Ensure that the user selects the column before it's used
