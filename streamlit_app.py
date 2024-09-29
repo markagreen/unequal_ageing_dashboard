@@ -25,14 +25,8 @@ data_choice = st.sidebar.selectbox("Select data to visualize", ("Ethnicity", "Ag
 # Select the appropriate DataFrame based on user selection
 if data_choice == "Ethnicity":
     df = ethnicity_df
-    # Create a colormap (continuous color scale)
-    min_value = 0
-    max_value = 100
 else:
     df = ageing_df
-    # Create a colormap (continuous color scale)
-    min_value = 0
-    max_value = 67
 
 st.write(min_value)
 st.write(max_value)
@@ -43,27 +37,24 @@ common_key = "lsoa21cd"  # Change this to the actual key in your data
 merged_gdf = gdf.merge(df, on='lsoa21cd', how='left', validate="one_to_one") # Merge
 merged_gdf = merged_gdf.dropna(subset=['geometry']) # Check geometries are valid
 
+# Exclude 'lsoa21cd' from the list of columns
+data_columns = merged_gdf.columns.tolist()
+data_columns.remove('lsoa21cd')  # Remove 'lsoa21cd' from the list
+
 # Select the column for displaying data
 # Ensure that the user selects the column before it's used
-data_column = st.selectbox('Select a column to display on the map', merged_gdf.columns)
+data_column = st.selectbox('Select a column to display on the map', data_columns)
 
 # Ensure the data column is numeric (convert if necessary)
 merged_gdf[data_column] = pd.to_numeric(merged_gdf[data_column], errors='coerce')
-
-# Check for non-null values in the selected data column
-non_null_values = merged_gdf[data_column].notnull().sum()
-st.write(f"Number of non-null values in {data_column}: {non_null_values}")
 
 # Remove rows with NaN values in the selected data column or missing geometries
 merged_gdf = merged_gdf.dropna(subset=[data_column])
 merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
 
-# Print unique values for debugging
-st.write(f"Unique values in {data_column}: {merged_gdf[data_column].unique()}")
-
 # Dynamically calculate min and max values for the selected data column
-min_value2 = merged_gdf[data_column].min()
-max_value2 = merged_gdf[data_column].max()
+min_value = merged_gdf[data_column].min()
+max_value = merged_gdf[data_column].max()
 
 st.write(min_value2)
 st.write(max_value2)
