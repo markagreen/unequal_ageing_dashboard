@@ -56,8 +56,8 @@ merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
 #else:
     
 # Create a colormap (continuous color scale)
-min_value = merged_gdf[data_column].min()
-max_value = merged_gdf[data_column].max()
+min_value = 0
+max_value = 100
 
 # Use a linear colormap (e.g., Viridis)
 colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
