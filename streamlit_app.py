@@ -49,52 +49,53 @@ merged_gdf = merged_gdf.dropna(subset=[data_column])
 merged_gdf = merged_gdf[merged_gdf.geometry.notnull()]
 
 # Calculate centroids and filter out any rows with missing centroids
-valid_centroids = merged_gdf.geometry.centroid.dropna()
+#valid_centroids = merged_gdf.geometry.centroid.dropna()
 
-if valid_centroids.empty:
-    st.error("No valid geometries available for mapping.")
-else:
-    # Create a colormap (continuous color scale)
-    min_value = merged_gdf[data_column].min()
-    max_value = merged_gdf[data_column].max()
+#if valid_centroids.empty:
+#    st.error("No valid geometries available for mapping.")
+#else:
+    
+# Create a colormap (continuous color scale)
+min_value = merged_gdf[data_column].min()
+max_value = merged_gdf[data_column].max()
 
-    # Use a linear colormap (e.g., Viridis)
-    colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
+# Use a linear colormap (e.g., Viridis)
+colormap = cm.LinearColormap(colors=['blue', 'green', 'yellow', 'orange', 'red'], vmin=min_value, vmax=max_value)
 
-    # Calculate the centroid of valid geometries for the map center
-    centroid_lat = valid_centroids.y.mean()
-    centroid_lon = valid_centroids.x.mean()
+# Calculate the centroid of valid geometries for the map center
+centroid_lat = valid_centroids.y.mean()
+centroid_lon = valid_centroids.x.mean()
 
-    # Create a base folium map
-    m = folium.Map(location=[centroid_lat, centroid_lon], zoom_start=10)
+# Create a base folium map
+m = folium.Map(location=[centroid_lat, centroid_lon], zoom_start=10)
 
-    # Function to assign colors using the colormap
-    def style_function(feature):
-        value = feature['properties'][data_column]
-        if pd.notnull(value):
-            return {
-                'fillColor': colormap(value),
-                'color': 'black',
-                'weight': 0.5,
-                'fillOpacity': 0.7,
-            }
-        else:
-            return {
-                'fillColor': 'gray',
-                'color': 'black',
-                'weight': 0.5,
-                'fillOpacity': 0.7,
-            }
+# Function to assign colors using the colormap
+def style_function(feature):
+    value = feature['properties'][data_column]
+    if pd.notnull(value):
+        return {
+            'fillColor': colormap(value),
+            'color': 'black',
+            'weight': 0.5,
+            'fillOpacity': 0.7,
+        }
+    else:
+        return {
+            'fillColor': 'gray',
+            'color': 'black',
+            'weight': 0.5,
+            'fillOpacity': 0.7,
+        }
 
-    # Add the GeoJSON layer to the map
-    folium.GeoJson(merged_gdf,
-                   name="Census Data",
-                   style_function=style_function).add_to(m)
+# Add the GeoJSON layer to the map
+folium.GeoJson(merged_gdf,
+                name="Census Data",
+                style_function=style_function).add_to(m)
 
-    # Add the colormap as a legend to the map
-    colormap.caption = f"{data_column} Values"
-    m.add_child(colormap)
+# Add the colormap as a legend to the map
+colormap.caption = f"{data_column} Values"
+m.add_child(colormap)
 
-    # Display the map in Streamlit
-    st_folium(m, width=700, height=500)
+# Display the map in Streamlit
+st_folium(m, width=700, height=500)
 
