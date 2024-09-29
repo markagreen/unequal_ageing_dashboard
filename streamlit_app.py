@@ -10,6 +10,9 @@ import branca.colormap as cm
 st.title("Ethnicity and Unequal Ageing in Rotherham and Sheffield")
 st.write("A mapping dashboard that presents data on ethnicity and ageing in Sheffield and Rotherham")
 
+import os
+st.write("Current working directory:", os.getcwd())
+
 # Load LSOA vector files
 gdf = gpd.read_file("vector_files/lsoas.geojson")
 gdf = gdf[gdf.geometry.notnull() & gdf.is_valid]
