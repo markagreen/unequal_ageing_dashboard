@@ -14,7 +14,7 @@ import os
 st.write("Current working directory:", os.getcwd())
 
 # Load LSOA vector files
-gdf = gpd.read_file("unequal_ageing_dashboard/vector_files/lsoas.geojson")
+gdf = gpd.read_file("/vector_files/lsoas.geojson")
 gdf = gdf[gdf.geometry.notnull() & gdf.is_valid]
 
 # Load Census datasets for mapping
