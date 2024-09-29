@@ -30,8 +30,8 @@ else:
 st.write(gdf.head())
 st.write(gdf.geometry.isna().sum(), "null geometries in GeoDataFrame before merge")
 
-st.write("Unique values in GeoJSON common key:", gdf[common_key_gdf].unique())
-st.write("Unique values in CSV common key:", df[common_key_df].unique())
+st.write("Unique values in GeoJSON common key:", gdf[lsoa21cd].unique())
+st.write("Unique values in CSV common key:", df[lsoa21cd].unique())
 
 # Merge GeoDataFrame with the selected DataFrame based on a common key
 common_key = "lsoa21cd"  # Change this to the actual key in your data
