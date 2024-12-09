@@ -1,0 +1,945 @@
+---
+title: "Ethnicity and Unequal Ageing in Rotherham" # Title of report
+author: "Mark A. Green, Helena M. Constante, Daniel Holman, Matthew Bennett" # Authors
+format: docx #  Save as word file [can output html and pdf at same time too] and use default template
+editor: visual # Enable visual editor option (good for checking things as go through)
+toc: true # Add table of contents
+number-sections: true # Number headings and subheadings automatically
+execute:
+  echo: false # Hide all code in outputs
+---
+
+```{r message=FALSE, warning=FALSE}
+# Load libraries
+library(data.table)
+library(ggplot2)
+library(viridisLite)
+library(scales)
+library(readODS)
+
+```
+
+# Summary
+
+The following infographic presents a summary of the main points from this report.
+
+![Infographic: Summary findings from the report](./rotherham_infographic.jpg)
+
+# Introduction
+
+While our ageing population is becoming increasingly ethnically diverse, not everyone reaches old age at the same level of wellbeing. The purpose of this report is to present key demographic and socioeconomic information about ethnicity and unequal ageing in Rotherham. It charts how people are included or excluded in society and at different parts of their lives, to describe the unjust and unfair experiences affecting many, if not all, racially minoritised ethnic groups.
+
+The primary data used in the report are taken from the 2021 Census. The Census happens every 10 years and is the most comprehensive snapshot of life in the UK. All Census data were freely accessed from the Office for National Statistics (ONS) ['custom Census data builder'](https://www.ons.gov.uk/datasets/create) and ['NOMIS resource'](https://www.nomisweb.co.uk/sources/census). A few other external datasets were also used, which are each defined as and when they are used.
+
+**Check Out Our Dashboard!**
+
+We have created a simple interactive website, also known as a dashboard, to help you visualise some of the information presented here. It allows you to explore how some of the ethnicity and ageing data in this report vary on a map of neighbourhoods in Rotherham. To see the dashboard, visit our [online mapping dashboard here](https://ethnicityunequalageing.streamlit.app/).
+
+# Ethnicity in Rotherham
+
+At the 2021 Census, there were 252 unique ethnic groups recorded in Rotherham. The ONS combine these unique groups into broader categories for the reporting purposes (i.e., to preserve data security in groups with small numbers). Here we focus on 19 broad categories of ethnicity as defined by the ONS. We acknowledge that these groups are broad and hide diversity within (e.g., the group '(Black) African' covers a whole continent of unique cultures and communities). Figure 1 below presents the population sizes of each of these 19 ethnic groups for Rotherham, as well as compares it to the distribution for England as a whole.
+
+## Ethnicities in Rotherham compared to England 
+
+*How to interpret the graph:* Data being plotted are percentages, which give the relative size of each group in relation to the total population size of the area extent (Rotherham or England). A larger value means that a particular ethnic group makes up a larger proportion of everyone who lives in each area. Each of the 19 ethnic groups are presented on the vertical side of the graph (y-axis), with their percentage values on the horizontal side (x-axis). As bars extend further to the right hand side, that particular ethnic group is larger in size. Exact numbers are plotted as well to help interpretation. Rotherham data are plot in red, England in blue.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1, fig.align = 'center'}
+# Create Rotheram dataset
+eth <- fread("./Census data/LADs/ethnicity.csv") # Load data
+eth_roth <- eth[eth$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+eth_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+eth_roth$Ethnicity[eth_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+eth_roth$Ethnicity[eth_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+eth_roth$Ethnicity[eth_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+eth_roth <- eth_roth[eth_roth$Ethnicity != "Does not apply"] # Delete as not required
+eth_roth$Percentage <- round(((eth_roth$Observation / sum(eth_roth$Observation)) * 100), 1) # Create percentage of total population measure
+eth_roth <- eth_roth[, c("Ethnicity", "Percentage")] # Keep only columns needed
+eth_roth$Extent <- "Rotherham" # Create column for plotting purpose
+rm(eth) # Tidy
+
+# Create national dataset
+eth_ew <- fread("./Census data/country/ethnicity.csv") # Load data
+eth_eng <- eth_ew[eth_ew$Countries == "England"] # Subset Rotherham
+eth_eng[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+eth_eng$Ethnicity[eth_eng$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+eth_eng$Ethnicity[eth_eng$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+eth_eng$Ethnicity[eth_eng$Ethnicity == "Irish"] <- "White Irish" # Repeat
+eth_eng <- eth_eng[eth_eng$Ethnicity != "Does not apply"] # Delete as not required
+eth_eng$Percentage <- round(((eth_eng$Observation / sum(eth_eng$Observation)) * 100), 1) # Create percentage of total population measure
+eth_eng <- eth_eng[, c("Ethnicity", "Percentage")] # Keep only columns needed
+eth_eng$Extent <- "England" # Create column for plotting purpose
+rm(eth_ew) # Tidy
+
+# Plot Rotherham data with England included for comparison
+alldata <- rbind(eth_roth, eth_eng) # Join datasets together
+plot1 <- ggplot(alldata, aes(x = Percentage, y = Ethnicity, group = Extent, fill = Extent)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity", position = "dodge") + # Use bar charts (dodge so keep apart)
+  # geom_text(aes(label = Percentage), # Plot numerical value
+  #           position = position_dodge(width = 0.9), # Keep apart
+  #           vjust = 0.5, # Adjust vertical position of the text
+  #           hjust = -0.2, # Adjust horizontal position of the text
+  #           size = 3) + # Size of the text
+  xlim(0, 100) + # Set range of values shown on x-axis
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) # Colour-blind friendly
+plot1 # Print
+
+# # Plot just Rotherham data
+# plot <- ggplot(eth_roth, aes(x = Percentage, y = Ethnicity)) + # Plot population percentage for ethnic groups
+#   geom_bar(stat = "identity") + # Use bar charts
+#   geom_text(aes(label = Percentage), # Plot numerical value
+#             vjust = 0.5, # Adjust vertical position of the text
+#             hjust = -0.2, # Adjust horizontal position of the text
+#             size = 3) + # Size of the text
+#   xlim(0, 100)
+# plot # Print plot
+
+```
+**Figure 1: Percentage of total population by ethnic group for Rotherham and England, 2021**
+
+*Highlights from Figure 1:* Figure 1 demonstrates that the White British ethnic group was the largest population group in Rotherham at 88.3%. This is a larger relative share of the population than for the England average (73.5%). The next largest ethnic group was Pakistani at 3.8%, which was larger than the England average of 2.8%. There was a sizeable 'Other White' population in Rotherham (2.2%), although interpretation of this ethnic group should be made cautiously since the ethnic group is a 'catch all' group capturing people who do not fit into the other groups. All other ethnic groups were smaller than 1% of the Rotherham population, with each group have a smaller value than compared to the England average (other than for the Roma and Gypsy or Irish Traveller ethnic groups).
+
+You can explore where each of the 19 ethnic groups in Figure 1 live in Rotherham using our [online mapping dashboard](https://ethnicityunequalageing.streamlit.app/).
+
+## Comparison of ethnicities in Rotherham and England between 2011 and 2021 Census
+
+Figure 2 below presents the change in sizes of each of the 19 groups since the last Census in 2011. Two groups (Roma and Other Mixed Ethnicity) were not captured in the 2011 Census data and therefore excluded from this graph.
+
+*How to interpret the graph:* The graph presents the difference in the percentage of total population size between the 2021 and 2011 Censuses. To calculate this, we have subtracted the 2011 value from the 2021 value (i.e., 2021 minus 2011). Since the percentages represent the relative share of each ethnic group as part of the total population, interpretation should be made in relation to this relative share. As such, a positive value (bars extending to the right hand side) demonstrates that a particular ethnic group has grown in-between Censuses. A negative value (bars extending to the left hand size) shows that an ethnic group declined in size. A value of 0 would show that a group has not changed in size. Exact numbers are plotted as well to help interpretation. Rotherham data are plot in red, England in blue.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Get analysis ready dataset
+census11 <- fread("./Census data/2011 data/ethnicity.csv") # Load 2011 Census data
+alldata <- merge(alldata, census11, by = c("Ethnicity", "Extent"), all.x = TRUE) # Join to 2021 data
+alldata$Difference <- round((alldata$Percentage.x - alldata$Percentage.y), 1) # Calculate difference between Census values
+
+# Plot
+plot2 <- ggplot(alldata, aes(x = Difference, y = Ethnicity, group = Extent, fill = Extent)) + # Plot population percentage for ethnic groups
+  # geom_vline(xintercept = 0) + # If want to have a vertical line for 0
+  geom_bar(stat = "identity", position = "dodge") + # Use bar charts (dodge so keep apart)
+  # geom_text(aes(label = Difference), # Plot numerical value
+  #           position = position_dodge(width = 0.9), # Keep apart
+  #           vjust = 0.5, # Adjust vertical position of the text
+  #           hjust = -0.4, # Adjust horizontal position of the text
+  #           size = 3) + # Size of the text
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(x = "Difference in percentages between 2021 and 2011 Censuses") # Edit x-axis label
+plot2
+
+# Tidy
+rm(alldata, eth_eng, eth_roth, census11, plot1, plot2) 
+
+```
+**Figure 2: Change in ethnic group population sizes for Rotherham and England, 2011-21**
+
+*Highlights from Figure 2:* Figure 2 shows the most ethnic groups have grown in-between 2011 and 2021 suggesting that Rotherham has become more ethnically diverse. The largest growth in Rotherham was in the Pakistani and Other White groups, follows by Any Other Ethnic Group and Black African groups. The growth of these groups followed similar patterns at the national level, although there was larger growth in the Any Other Ethnic Group, Black African, Other White and Indian groups at the national level. The exceptions to this growth are the White Irish (declined by 0.1%) and White British (declined by 3.6%) which both were smaller in 2021 than in 2011. In comparison to the England average, the White British ethnic group declined as a proportional share
+
+# Ageing in Rotherham
+
+This section now examines the extent of an ageing population in Rotherham, how this is changing over time and how it impacts different ethnic groups. 
+
+## Ageing populations in Rotherham compared to England
+
+First, we consider below the overall composition of the population in Rotherham and how it differs by age. 
+
+*How to interpret the graph:* The graph presents the population size of five-year age groups. The bars are ordered in age order, so that older age groups are at the top of the graph and the youngest age groups are at the bottom. As the bars extend further to the right hand side, a particular age group makes up a larger share of the overall population size for a place. Rotherham data are plot in red, England in blue.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Load and tidy Rotherham data
+age <- fread("./Census data/LADs/age.csv") # Load data
+age_roth <- age[age$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+age_roth$Percentage <- round(((age_roth$Observation / sum(age_roth$Observation)) * 100), 1) # Create percentage of total population measure
+setnames(age_roth, old = c("Age (B) (18 categories)"), new = c("Age")) # Rename variable for ease of use
+setnames(age_roth, old = c("Lower tier local authorities Code"), new = c("code")) # Repeat
+setnames(age_roth, old = c("Lower tier local authorities"), new = c("name")) # Repeat
+
+# Load and tidy England data
+age_eng <- fread("./Census data/country/age.csv") # Load data
+age_eng <- age_eng[age_eng$Countries == "England"] # Subset Rotherham
+age_eng$Percentage <- round(((age_eng$Observation / sum(age_eng$Observation)) * 100), 1) # Create percentage of total population measure
+setnames(age_eng, old = c("Age (B) (18 categories)"), new = c("Age")) # Rename variable for ease of use
+setnames(age_eng, old = c("Countries Code"), new = c("code")) # Repeat
+setnames(age_eng, old = c("Countries"), new = c("name")) # Repeat
+
+# Merge datasets together
+age_combined <- rbind(age_roth, age_eng)
+
+# Convert age to a factor with correct order
+age_combined$Age <- factor(age_combined$Age, 
+                              levels = c("Aged 4 years and under", "Aged 5 to 9 years", "Aged 10 to 14 years", "Aged 15 to 19 years", "Aged 20 to 24 years", 
+                                         "Aged 25 to 29 years", "Aged 30 to 34 years", "Aged 35 to 39 years", "Aged 40 to 44 years", "Aged 45 to 49 years", 
+                                         "Aged 50 to 54 years", "Aged 55 to 59 years", "Aged 60 to 64 years", "Aged 65 to 69 years", "Aged 70 to 74 years", 
+                                         "Aged 75 to 79 years", "Aged 80 to 84 years", "Aged 85 years and over"))
+age_combined[, age_clean := factor(gsub("Aged | years", "", Age), # Get rid of aged and years parts for simpler plotting and store as factor
+                         levels = gsub("Aged | years", "", levels(Age)))]
+         
+# Plot just Rotherham data
+plot3 <- ggplot(age_combined, aes(x = Percentage, y = age_clean, group = name, fill = name)) + # Plot population percentage for ethnic groups
+    geom_bar(stat = "identity", position = "dodge") + # Use bar charts and dodge to keep separate
+    scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+    labs(y = "Age Band", fill = "Location") # Rename y-axis label
+plot3 # Print plot
+
+
+
+```
+**Figure 3: Percentage of population by age band for Rotherham, 2021**
+
+*Highlights from Figure 3:* Currently, `r sum(age_combined$Percentage[age_combined$name == "Rotherham" & (age_combined$Age == "Aged 85 years and over" | age_combined$Age == "Aged 85 years and over" | age_combined$Age == "Aged 80 to 84 years" | age_combined$Age == "Aged 75 to 79 years" | age_combined$Age == "Aged 70 to 74 years" | age_combined$Age == "Aged 65 to 69 years")])`% of the population in Rotherham are aged 65 years and over. While the shape of the distribution looks relatively similar to the average for England overall, there are two key differences between Rotherham and England:
+
+1. Adults aged 50 years and above constitute a larger share of the population in Rotherham than compared to the average for England. This is observed with the Rotherham bars being larger than the England bars for all age groups above 50 years, other than for the 85 years and over group. This would suggest that the effects of an ageing population are felt more in Rotherham and this is likely to continue for some time. However, it has not translated to the oldest old groups yet.
+2. There are noticeably lower proportions of people aged 15-19, 20-24, and 25-29 years than compared to the England averages. This may reflect higher out-flows of younger adults leaving Rotherham in search of higher education or work opportunities elsewhere. This impacts the local support for an ageing population (e.g., people working in caring roles or paying taxes to support social care).  
+
+## Comparison of age groups in Rotherham and England between 2011 and 2021 Census
+
+We next consider how each of these age groups have changed since the last census in 2011. 
+
+*How to interpret the graph:* The graph presents change in the population size of each five-year age groups between 2011 and 2021. Change refers to the relative difference in size and is calculated by dividing the 2021 value by the 2011 (i.e., giving the percentage change between censuses). As such, bars that extend to the right (greater than a value of 0) represent age groups that increased in size between census periods (with the value being the percentage increase in total population size). In contrast, when bars extend to the left, they have decreased in population size between 2011 and 2021. The bars are ordered in age order, so that older age groups are at the top of the graph and the youngest age groups are at the bottom. Rotherham data are plot in red, England in blue.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Load and tidy data
+age11 <- fread("./Census data/2011 data/ethnicity_age.csv")
+age11 <- age11[age11$name == "England" | age11$name == "Rotherham"] # Subset areas needed
+age11[, age_clean := gsub("Age ", "", Age)] # Get rid of aged part to match
+age11_all <- age11[, c(2,22,23)] # Subset columns needed
+
+# Join datasets together
+age_combined2 <- age_combined[, c(2, 5, 7)] # Subset columns so matches above
+age_combined2 <- merge(age_combined2, age11_all, by = c("age_clean", "name"), all.x = TRUE) # Join together
+
+# Convert age to a factor with correct order
+age_combined2$age_clean <- factor(age_combined2$age_clean, 
+                              levels = c("4 and under", "5 to 9", "10 to 14", "15 to 19", "20 to 24", 
+                                         "25 to 29", "30 to 34", "35 to 39", "40 to 44", "45 to 49", 
+                                         "50 to 54", "55 to 59", "60 to 64", "65 to 69", "70 to 74", 
+                                         "75 to 79", "80 to 84", "85 and over"))
+
+# Plot
+age_combined2$change <- round((age_combined2$Observation / age_combined2$Total - 1) * 100, 1) # Calculate relative change in percentage terms
+plot4 <- ggplot(age_combined2, aes(x = change, y = age_clean, group = name, fill = name)) + # Plot population percentage for ethnic groups
+    geom_bar(stat = "identity", position = "dodge") + # Use bar charts and dodge to keep separate
+    # geom_text(aes(label = change), # Plot numerical value
+    #         position = position_dodge(width = 0.9), # Keep apart
+    #         vjust = 0.5, # Adjust vertical position of the text
+    #         hjust = -0.4, # Adjust horizontal position of the text
+    #         size = 3) + # Size of the text
+    scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+    labs(y = "Age Band", x = "Percentage change between 2021 and 2011", fill = "Location") # Rename y-axis label
+plot4 # Print plot
+
+# Tidy
+rm(age, age_eng, age_roth, age_combined, age11, age11_all)
+
+
+```
+**Figure 4: Percentage change in population size between 2021 and 2011 by age band for Rotherham, 2021**
+
+*Highlights from Figure 4:* All age groups 65 years and over have increased in size, particularly the age groups 70 to 74 years (increased by `r age_combined2$change[age_combined2$age_clean == "70 to 74" & age_combined2$name == "Rotherham"]`%), 75 to 79 years (increased by `r age_combined2$change[age_combined2$age_clean == "75 to 79" & age_combined2$name == "Rotherham"]`%) and 80 to 84 years (increased by `r age_combined2$change[age_combined2$age_clean == "80 to 84" & age_combined2$name == "Rotherham"]`%). Growth of the 75 to 79 and 80 to 84 years age groups was greater than the England average. There are different patterns of change observed in younger age groups. Some groups increased (e.g., 50 to 59 years, 25 to 39 years, and 5 to 14 years), whilst others decreased (40 to 49 years, 15 to 24 years, and 4 years and under). These trends are likely to have implications for caring for an ageing population (e.g., fewer younger adults or loss of people post-education).
+
+## Age distribution across ethnicities in Rotherham
+
+This section now considers how the extent of an ageing population differs across ethnic groups in Rotherham. We first examine the age distribution of each ethnic group in Rotherham. 
+
+*How to interpret the graph:* The graph presents the population size of five-year age groups for each ethic group. The plot are divided by each ethnic group to allow us to look at them separately. The bars are ordered in age order, so that older age groups are at the top of the graph and the youngest age groups are at the bottom. As the bars extend further to the right hand side, a particular age group makes up a larger share of the overall population size for a place. Only data for Rotherham are displayed here. 
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Load and tidy data
+age <- fread("./Census data/LADs/ethnicity_age.csv")
+age_roth <- age[age$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+age_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+age_roth$Ethnicity[age_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+age_roth$Ethnicity[age_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+age_roth$Ethnicity[age_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+age_roth <- age_roth[age_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(age_roth, old = c("Age (B) (18 categories)"), new = c("Age")) # Rename variable for ease of use
+eth_size_r <- age_roth[, list(population = sum(Observation)), by = "Ethnicity"] # Get ethnic group population size so can calculate percentages later
+age_roth <- merge(age_roth, eth_size_r, by = "Ethnicity", all.x = TRUE) # Join on population size
+age_roth$Percentage <- round(((age_roth$Observation / age_roth$population) * 100), 1) # Create percentage of total population measure
+age_roth <- age_roth[, c("Ethnicity", "Age", "Observation", "Percentage")] # Keep only columns needed
+age_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert age to a factor with correct order
+age_roth$Age <- factor(age_roth$Age, 
+                              levels = c("Aged 4 years and under", "Aged 5 to 9 years", "Aged 10 to 14 years", "Aged 15 to 19 years", "Aged 20 to 24 years", 
+                                         "Aged 25 to 29 years", "Aged 30 to 34 years", "Aged 35 to 39 years", "Aged 40 to 44 years", "Aged 45 to 49 years", 
+                                         "Aged 50 to 54 years", "Aged 55 to 59 years", "Aged 60 to 64 years", "Aged 65 to 69 years", "Aged 70 to 74 years", 
+                                         "Aged 75 to 79 years", "Aged 80 to 84 years", "Aged 85 years and over"))
+age_roth[, age_clean := factor(gsub("Aged | years", "", Age), # Get rid of aged and years parts for simpler plotting and store as factor
+                         levels = gsub("Aged | years", "", levels(Age)))]
+
+# Plot just Rotherham data
+plot5 <- ggplot(age_roth, aes(x = Percentage, y = age_clean)) + # Plot population percentage for ethnic groups
+    geom_bar(stat = "identity") + # Use bar charts
+    facet_wrap(~Ethnicity, labeller = label_wrap_gen(width = 15)) +
+    ylab("Age Band") + # Rename y-axis label
+    theme(axis.text=element_text(size=7)) #+
+    #scale_y_discrete(breaks = function(y) y[seq(1, length(y), by = 2)]) # Only print every other label on y-axis
+plot5 # Print plot
+
+```
+**Figure 5: Percentage of population by age band and ethnic group for Rotherham, 2021**
+
+Figure 5 demonstrates how the age composition of each ethnic group in Rotherham differ. Both of the White British and White Irish groups display ageing populations (especially the White Irish group). In contrast, some groups have distinctly young populations (e.g, Roma, Gypsy or Irish Traveller, Black Other, White and Asian, White and Black African, White and Black Caribbean, Other Mixed Ethnicity). Some of these ethnic groups have very few older adults. For example, adults aged 65 years and over who reported their ethnicity was Roma only consisted of `r sum(age_roth$Percentage[age_roth$Ethnicity == "Roma" & (age_roth$Age == "Aged 85 years and over" | age_roth$Age == "Aged 85 years and over" | age_roth$Age == "Aged 80 to 84 years" | age_roth$Age == "Aged 75 to 79 years" | age_roth$Age == "Aged 70 to 74 years" | age_roth$Age == "Aged 65 to 69 years")])`% of the Roma population in Rotherham. The Black Caribbean group have a distinctly large population group approaching retirement. For example, `r sum(age_roth$Percentage[age_roth$Ethnicity == "Caribbean" & (age_roth$Age == "Aged 55 to 59 years" | age_roth$Age == "Aged 60 to 64 years")])`% are aged 55 to 64 years (`r sum(age_roth$Percentage[age_roth$Ethnicity == "Caribbean" & (age_roth$Age == "Aged 60 to 64 years")])`% are aged 60 to 64 years), in contrast to only `r sum(age_roth$Percentage[age_roth$Ethnicity == "Caribbean" & (age_roth$Age == "Aged 85 years and over" | age_roth$Age == "Aged 85 years and over" | age_roth$Age == "Aged 80 to 84 years" | age_roth$Age == "Aged 75 to 79 years" | age_roth$Age == "Aged 70 to 74 years" | age_roth$Age == "Aged 65 to 69 years")])`% aged 65 years and over. This group is likely to be a significant impact on the diversit of the ageing population in Rotherham soon.
+
+# Markers of inclusion/exclusion of ethnicity and unequal ageing in Rotherham
+
+The follow sections explore different dimensions of inequality that reflect different experiences of inclusion and exclusion that particularly affect racially minoritised groups. We focus on socioeconomic disparities (housing tenure, qualifications, and employment), health inequalities and experiences of hate crime.
+
+## Housing tenure distribution across ethnicities
+
+Figure 6 below shows differences in housing tenure (i.e., ownership structure of housing situation) by ethnicity for Rotherham.
+
+*How to interpret the graph:* The stacked bar plot describes four categories of housing tenure (further disaggregation was not possible whilst preserving the number of ethnic groups used here). Each ethnic category adds up to 100%. Where a bar colour is larger in size, it shows that a particular ethnic group is more represented in a particular housing tenure. The values are proportions based on the ethnic group totals. Only data for Rotherham in 2021 are presented.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Create Rotheram dataset
+ten <- fread("./Census data/LADs/ethnicity_tenure.csv") # Load data
+ten_roth <- ten[ten$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+ten_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+ten_roth$Ethnicity[ten_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+ten_roth$Ethnicity[ten_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+ten_roth$Ethnicity[ten_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+ten_roth <- ten_roth[ten_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(ten_roth, old = c("Tenure of household (5 categories)"), new = c("Tenure")) # Rename variable for ease of use
+ten_roth$Tenure[ten_roth$Tenure == "Owned: Owns outright"] <- "Owned outright" # Now rename tenure descriptors
+ten_roth$Tenure[ten_roth$Tenure == "Owned: Owns with a mortgage or loan or shared ownership"] <- "Owned with mortgage" # Repeat for each
+ten_roth$Tenure[ten_roth$Tenure == "Rented: Social rented"] <- "Social rented" # Repeat for each
+ten_roth$Tenure[ten_roth$Tenure == "Private rented or lives rent free"] <- "Private rented or rent free" # Repeat for each
+ten_roth <- ten_roth[ten_roth$Tenure != "Does not apply"] # Delete as not required
+eth_size_r <- ten_roth[, list(population = sum(Observation)), by = "Ethnicity"] # Get ethnic group population size so can calculate percentages later
+ten_roth <- merge(ten_roth, eth_size_r, by = "Ethnicity", all.x = TRUE) # Join on population size
+ten_roth$Percentage <- round(((ten_roth$Observation / ten_roth$population) * 100), 1) # Create percentage of total population measure
+ten_roth <- ten_roth[, c("Ethnicity", "Tenure", "Percentage")] # Keep only columns needed
+ten_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Plot
+
+# Plot just Rotherham data
+plot6 <- ggplot(ten_roth, aes(x = Percentage, y = Ethnicity, fill = Tenure)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow=2, direction = "vertical")) # Place legend over two rows
+plot6 # Print plot
+
+# ten_roth$Percentage[ten_roth$Ethnicity == "Roma" & ten_roth$Tenure == "Private rented or rent free"] # To get the percentage of Roma population in private or rent free tenure
+
+```
+**Figure 6: Percentage of ethnic group population by housing tenure for Rotherham, 2021**
+
+*Highlights from Figure 6:* There are wide inequalities in housing tenure status across ethnic groups. The highest proportion with owned outright was White Irish (`r ten_roth$Percentage[ten_roth$Ethnicity == "White Irish" & ten_roth$Tenure == "Owned outright"]`%), followed by Chinese (`r ten_roth$Percentage[ten_roth$Ethnicity == "Chinese" & ten_roth$Tenure == "Owned outright"]`%) and White British (`r ten_roth$Percentage[ten_roth$Ethnicity == "White British" & ten_roth$Tenure == "Owned outright"]`%). Both Bangladeshi and Pakistani communities had more than 1 in 4 households as owned outright. When we consider 'owned outright' and 'owned with mortgage' together as a marker of home ownership, the highest proportion is found for Indian (`r ten_roth$Percentage[ten_roth$Ethnicity == "Indian" & ten_roth$Tenure == "Owned outright"] + ten_roth$Percentage[ten_roth$Ethnicity == "Indian" & ten_roth$Tenure == "Owned with mortgage"]`%), followed by Pakistani (`r ten_roth$Percentage[ten_roth$Ethnicity == "Pakistani" & ten_roth$Tenure == "Owned outright"] + ten_roth$Percentage[ten_roth$Ethnicity == "Pakistani" & ten_roth$Tenure == "Owned with mortgage"]`%). White Irish, White British, Chinese, Black Caribbean and Bangladeshi also have values greater than 50% for these two categories combined.
+
+When considering rental status, social housing was highest in the Black African group (`r ten_roth$Percentage[ten_roth$Ethnicity == "African" & ten_roth$Tenure == "Social rented"]`%), followed by Arab (`r ten_roth$Percentage[ten_roth$Ethnicity == "Arab" & ten_roth$Tenure == "Social rented"]`%). Higher values are also observed for the Gypsy or Irish Traveller, Mixed ethnicity groups and most groups starting with 'Other'. Higher proportions for 'private rented or rent free' follow a similar pattern. The Roma population were over-represented in 'private rented or rent free' and few owning a home, with `r ten_roth$Percentage[ten_roth$Ethnicity == "Roma" & ten_roth$Tenure == "Private rented or rent free"]`% of the Roma population reporting this option.
+
+We also presented data on how housing tenure varies by ethnic group across different age groups in the Appendix (see Section 9.2). These data show growing home ownership trends in older age groups, but with some groups having higher ownership (e.g., Indian, Bangladeshi, Chinese) than compared to other groups (e.g., Black African, Roma, Other Black, White and Black Caribbean).
+
+## Qualifications distribution across ethnicities
+
+Figure 7 presents differences in highest level of qualification achieved by ethnic group.
+
+*How to interpret the graph:* The stacked bar plot presents the percentage of each ethnic group by the highest level of qualifications achieved. Each category adds up to 100%. Where a bar is larger in size, it shows that a particular ethnic group is more represented in a particular qualification level. The values are proportions based on the ethnic group totals. Only data for Rotherham in 2021 are presented. The levels of qualifications are defined as follows:
+
+-   No qualifications
+-   Level 1 and entry level qualifications: 1 to 4 GCSEs grade A* to C, Any GCSEs at other grades, O levels or CSEs (any grades), 1 AS level, NVQ level 1, Foundation GNVQ, Basic or Essential Skills, or equivalent
+-   Level 2 qualifications: 5 or more GCSEs (A* to C or 9 to 4), O levels (passes), CSEs (grade 1), School Certification, 1 A level, 2 to 3 AS levels, VCEs, Intermediate or Higher Diploma, Welsh Baccalaureate Intermediate Diploma, NVQ level 2, Intermediate GNVQ, City and Guilds Craft, BTEC First or General Diploma, RSA Diploma, or equivalent
+-   Level 3 qualifications: 2 or more A levels or VCEs, 4 or more AS levels, Higher School Certificate, Progression or Advanced Diploma, Welsh Baccalaureate Advance Diploma, NVQ level 3; Advanced GNVQ, City and Guilds Advanced Craft, ONC, OND, BTEC National, RSA Advanced Diploma, or equivalent
+-   Level 4 qualifications or above: degree (BA, BSc), higher degree (MA, PhD, PGCE), NVQ level 4 to 5, HNC, HND, RSA Higher Diploma, BTEC Higher level, professional qualifications (for example, teaching, nursing, accountancy), or equivalent
+-   Other: apprenticeships, vocational or work-related qualifications, other qualifications achieved in England or Wales, qualifications achieved outside England or Wales (equivalent not stated or unknown))
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Create Rotheram dataset
+edu <- fread("./Census data/LADs/ethnicity_quals.csv") # Load data
+edu_roth <- edu[edu$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+edu_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+edu_roth$Ethnicity[edu_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+edu_roth$Ethnicity[edu_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+edu_roth$Ethnicity[edu_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+edu_roth <- edu_roth[edu_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(edu_roth, old = c("Highest level of qualification (7 categories) Code"), new = c("Education")) # Rename variable for ease of use
+edu_roth <- edu_roth[edu_roth$Education != -8] # Delete as not required (unknown)
+eth_size_r <- edu_roth[, list(population = sum(Observation)), by = "Ethnicity"] # Get ethnic group population size so can calculate percentages later
+edu_roth <- merge(edu_roth, eth_size_r, by = "Ethnicity", all.x = TRUE) # Join on population size
+edu_roth$Percentage <- round(((edu_roth$Observation / edu_roth$population) * 100), 1) # Create percentage of total population measure
+edu_roth <- edu_roth[, c("Ethnicity", "Education", "Percentage")] # Keep only columns needed
+edu_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert Education to a factor with new labels
+edu_roth$Education2 <- factor(edu_roth$Education, 
+                              levels = 0:5, 
+                              labels = c("No qualifications", "Level 1", "Level 2", 
+                                        "Level 3", "Level 4+", "Other"))
+
+
+# Plot just Rotherham data
+plot9 <- ggplot(edu_roth, aes(x = Percentage, y = Ethnicity, fill = Education2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(fill= "Education") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow = 2, direction = "vertical")) # Edit legend title to the top rather than side and place over two rows
+plot9 # Print plot
+
+
+```
+**Figure 7: Percentage of ethnic group population by highest qualification for Rotherham, 2021**
+
+*Highlights from Figure 7:* There are large differences by ethnic group. The ethnic groups Roma, Gypsy or Irish Traveller and Any Other Ethnic Group have the highest percentages with no qualifications, including being over 50% for the first two groups. In contrast, the percentage of people who have achieved level 4 or higher (at least degree level of equivalent) is highest in the Indian, Bangladeshi and Black African ethnic groups all of which have greater than 50% rates here.
+
+We further reported how these data varied by age group as well (see Section 9.3 in the Appendix). The data showed that younger age groups were more likely to have a higher level of qualifications than older groups, with differences in experiences across ethnic group reported above replicated across age groups as well. 
+
+## Economic activity status distribution across ethnicities
+
+In this section, we consider census data relating to the labour market. First, we examine main economic activity status. This is a general measure of whether people are participating in the labour market. People may be economically active (i.e., working or looking for work) or inactive (i.e., not looking for employment). Below we present the distribution of main economic activity status by ethnic group.
+
+*How to interpret the graph:* The stacked bar plot presents the percentage of each ethnic group by each marker of their main economic activity status. Each category adds up to 100%. Where a bar is larger in size, it shows that a particular ethnic group is more represented in a particular type of economic activity. The values are proportions based on the ethnic group totals. Only data for Rotherham in 2021 are presented.  
+
+```{r message=FALSE, warning=FALSE, fig.width = 11, fig.height = 11}
+# Create Rotheram dataset
+econ <- fread("./Census data/LADs/ethnicity_econ_act.csv") # Load data
+econ_roth <- econ[econ$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+econ_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+econ_roth$Ethnicity[econ_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+econ_roth$Ethnicity[econ_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+econ_roth$Ethnicity[econ_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+econ_roth <- econ_roth[econ_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(econ_roth, old = c("Economic activity status (12 categories) Code"), new = c("Economic_activity")) # Rename variable for ease of use
+econ_roth <- econ_roth[econ_roth$Economic_activity != -8] # Delete as not required (unknown)
+eth_size_r <- econ_roth[, list(population = sum(Observation)), by = "Ethnicity"] # Get ethnic group population size so can calculate percentages later
+econ_roth <- merge(econ_roth, eth_size_r, by = "Ethnicity", all.x = TRUE) # Join on population size
+econ_roth$Percentage <- round(((econ_roth$Observation / econ_roth$population) * 100), 1) # Create percentage of total population measure
+econ_roth <- econ_roth[, c("Ethnicity", "Economic_activity", "Percentage")] # Keep only columns needed
+econ_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert a factor with new labels
+econ_roth$Economic_activity2 <- factor(econ_roth$Economic_activity, 
+                              levels = 1:11, 
+                              labels = c("Employed", "Self-employed (with employees)", "Self-employed (no employees)", 
+                                        "Unemployed", "Economically active student working", "Economically active student seeking work", "Retired", "Economically inactive student", "Looking after home or family", "Long-term sick or disabled", "Other"))
+
+
+# Plot just Rotherham data
+plot10 <- ggplot(econ_roth, aes(x = Percentage, y = Ethnicity, fill = Economic_activity2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(fill= "Economic activity status") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow=4, direction = "vertical")) # Place legend over four rows
+plot10 # Print plot
+
+```
+**Figure 8: Percentage of ethnic group population by economic activity for Rotherham, 2021**
+
+*Highlights from Figure 8:* There are much larger shares of the population who are retired in the White British and White Irish populations, partly because they are older populations on average than compared to the other ethnic groups. Some ethnic groups have a majority of people employed (e.g., Black Caribbean, Indian). Self-employment with no employees is highest in the Paikstani, Arab, Other Asian and Gypsy or Irish Traveller groups, Self employed with employees is highest in the Indian, Bangladeshi, and Chinese ethnic groups. The Roma and Gypsy or Irish Traveller groups also stand out for having higher than average values for 'other', 'long-term sick or disabled' and 'looking after home or family'. 
+
+Data on how economic activity varies by age group can be observed in Section 9.4 in the Appendix. These patterns largely mirror those reported above for most age groups.
+
+## Distribution of type of employment by ethnicities
+
+We next consider the type of employment that people are employed in. We used the nine category version of the ONS National Statistics Socio-economic Classification (NS-SeC) which roughly orders people in terms of material resources available due to the kinds of occupations that are associated in each group (i.e., group 1 has the highest median income). This provides an occupational based proxy for social class where we can evaluate if some ethnic groups are over- or under-represented in certain occupations. NS-SeC is divided into the following nine groups:
+
+1.  *Higher managers and professionals:* Higher managerial, administrative and professional occupations (NS-SeC bands L1, L2 and L3) such as medical practitioner, lecturer, solicitor, statistician, accountant etc.
+2.  *Lower managers and professionals:* Lower managerial, administrative and professional occupations (NS-SeC bands L4, L5 and L6) such as nurse, midwife, journalist, teacher, paramedic, housing manager, youth worker etc. 
+3.  *Intermediate:* Intermediate occupations (NS-SeC band L7) such as medical secretary, ambulance staff, police officer, travel agent etc.
+4.  *Small employers:* Small employers and own account workers (NS-SeC bands L8 and L9) such as taxi driver, roofer, hotel manager, driving instructor etc.
+5.  *Lower supervisory and technical:* Lower supervisory and technical occupations (NS-SeC bands L10 and L11) such as baker, electrician, gardener, train diver, car mechanic etc. 
+6.  *Semi-routine:* Semi-routine occupations (NS-SeC band L12) such as dental nurse, farm labourer, cook, care worker, retail cashier etc.
+7.  *Routine:* Routine occupations (NS-SeC band L13) such as cleaner, waiter, labourer, miner, florist etc.
+8.  *Never worked and long-term unemployed:* People who have never worked or are long-term unemployed (NS-SeC bands L14.1 and L14.2).
+9.  *Full-time students:* People who are in full-time education (NS-SeC band L15).
+
+*How to interpret the graph:* The stacked bar plot presents the percentage of each ethnic group by each NS-SeC category. Each category adds up to 100%. Where a bar is larger in size, it shows that a particular ethnic group is more represented in a particular group. The values are proportions based on the ethnic group totals. Only data for Rotherham in 2021 are presented. 
+
+```{r message=FALSE, warning=FALSE, fig.width = 8, fig.height = 8}
+# Create Rotheram dataset
+nssec <- fread("./Census data/LADs/ethnicity_age_nnsec.csv") # Load data
+nssec_roth <- nssec[nssec$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+nssec_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+nssec_roth <- nssec_roth[nssec_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(nssec_roth, old = c("National Statistics Socio-economic Classification (NS-SeC) (10 categories) Code"), new = c("NSSeC")) # Rename variable for ease of use
+nssec_roth <- nssec_roth[nssec_roth$NSSeC != -8] # Delete as not required (unknown)
+nssec_roth <- nssec_roth[, list(Observation = sum(Observation)), by = c("Ethnicity", "NSSeC")] # Aggregate by ethnic group to get rid of age groups
+eth_size_r <- nssec_roth[, list(population = sum(Observation)), by = "Ethnicity"] # Get ethnic group population size so can calculate percentages later
+nssec_roth <- merge(nssec_roth, eth_size_r, by = "Ethnicity", all.x = TRUE) # Join on population size
+nssec_roth$Percentage <- round(((nssec_roth$Observation / nssec_roth$population) * 100), 1) # Create percentage of total population measure
+nssec_roth <- nssec_roth[, c("Ethnicity", "NSSeC", "Percentage")] # Keep only columns needed
+nssec_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert a factor with new labels
+nssec_roth$nssec2 <- factor(nssec_roth$NSSeC, 
+                              levels = 1:9, 
+                              labels = c("Higher managers", "Lower managers", "Intermediate", 
+                                        "Small employers", "Lower supervisory and technical", "Semi-routine", "Routine", "Never worked and long-term unemployed", "Full-time students"))
+
+# Plot just Rotherham data
+plot11 <- ggplot(nssec_roth, aes(x = Percentage, y = Ethnicity, fill = nssec2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  theme(legend.position="bottom", # Place legend at bottom
+    legend.text = element_text(size = 8),   # Adjust legend text size
+    legend.title = element_text(size = 9)) + # Adjust legend title size
+  labs(fill= "NS-SeC group") + # Add plot title
+  guides(fill=guide_legend(nrow=3, direction = "vertical")) # Place legend over two rows 
+plot11 # Print plot
+
+```
+**Figure 9: Percentage of ethnic group population by National Statistics Socio-economic Classification (NS-SeC) for Rotherham, 2021**
+
+*Highlights from Figure 9:* If we consider the top two groups first (higher and lower managers), we can see higher than average percentages in the Indian, Bangladeshi and Black Caribbean groups. In contrast, Roma, Gypsy or Irish Traveller, Pakistani, and Arab groups have higher percentages found in the 'never worked and long-term unemployed' group. The Roma group also has a higher percentage of people employed in routine occupations compared to the other ethnic groups.  
+
+Section 9.5 in the Appendix provides a breakdown for how these data also vary by age group. The graphs demonstrate how inequalities facing Roma and Gypsy or Irish Traveller begin in the youngest age groups and are maintained in older groups (especially by age 45 to 64). If we focus on the people in the higher and lower manager groups, these are consistently higher in the White Irish, White British, Indian, Chinese, Caribbean, and Bangladeshi groups across all age groups. 
+
+## Disability distribution by age across ethnicities
+
+The following section considers measures of health and wellbeing captured in the census and how they vary by ethnicity. We begin by looking at how living with a disability varies by ethnicity in Rotherham. Age is a strong determinant of health status so we have stratified this plot by broad age groups for this measure to minimise certain groups distorting overall relationships because they have an older or younger population structure. 
+
+*How to interpret the graph:* Data being plotted are percentages, which give the relative size of each group who are living with a disability in relation to the total population size of Rotherham of each ethnic group. A larger value means that a particular ethnic group has a larger share of people who reported that they are living with a diasbility. Each of the 19 ethnic groups are presented on the vertical side of the graph (y-axis), with their percentage values on the horizontal side (x-axis). As bars extend further to the right hand side, that particular ethnic group has more people who reported that they are living with a diasbility. Only data for Rotherham are presented. Individual plots are given by age group.
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Create Rotheram dataset
+nssec <- fread("./Census data/LADs/ethnicity_age_nnsec.csv") # Load data
+nssec_roth <- nssec[nssec$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+nssec_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+nssec_roth <- nssec_roth[nssec_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(nssec_roth, old = c("National Statistics Socio-economic Classification (NS-SeC) (10 categories) Code"), new = c("NSSeC")) # Rename variable for ease of use
+nssec_roth <- nssec_roth[nssec_roth$NSSeC != -8] # Delete as not required (unknown)
+eth_size_r <- nssec_roth[, list(population = sum(Observation)), by = c("Ethnicity", "Age (D) (8 categories)")] # Get ethnic group population size so can calculate percentages later
+nssec_roth <- merge(nssec_roth, eth_size_r, by = c("Ethnicity", "Age (D) (8 categories)"), all.x = TRUE) # Join on population size
+nssec_roth$Percentage <- round(((nssec_roth$Observation / nssec_roth$population) * 100), 1) # Create percentage of total population measure
+#nssec_roth <- nssec_roth[, c("Ethnicity", "NSSeC", "Percentage")] # Keep only columns needed
+#nssec_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert a factor with new labels
+nssec_roth$nssec2 <- factor(nssec_roth$NSSeC, 
+                              levels = 1:9, 
+                              labels = c("Higher managers", "Lower managers", "Intermediate", 
+                                        "Small employers", "Lower supervisory and technical", "Semi-routine", "Routine", "Never worked and long-term unemployed", "Full-time students"))
+
+# Plot just Rotherham data
+plot11 <- ggplot(nssec_roth[nssec_roth$`Age (D) (8 categories)` != "Aged 15 years and under" & nssec_roth$`Age (D) (8 categories)` != "Aged 65 to 74 years" & nssec_roth$`Age (D) (8 categories)` != "Aged 75 years and over"], aes(x = Percentage, y = Ethnicity, fill = nssec2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  facet_wrap(~`Age (D) (8 categories)`) +
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(fill= "NS-SeC group") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow=3, direction = "vertical")) # Place legend over two rows 
+plot11 # Print plot
+
+```
+**Figure 10: Percentage of people who are living with a disability as defined under the Equality Act by ethnic group for Rotherham, 2021**
+
+*Highlights from Figure 10:* The percentage of people living with a disability increases as age groups become older. The Chinese ethnic group has lower levels of people living with a disability at all age groups than compared to the other ethnic groups. The Gypsy or Irish Traveller ethnic group had higher than average levels in most age groups. The Bangladeshi ethnic group also has higher than average levels from 45 years onwards, with more than half in age groups after 55 years. 
+
+## Provision of unpaid care distribution by ethnicities
+
+The next health outcome that we examine is the provision of unpaid care. This data is based on the census question "Do you look after, or give any help or support to, anyone because they have long-term physical or mental health conditions or illnesses, or problems related to old age?". This support should not include any paid employment care. 
+
+*How to interpret the graph:* Data being plotted are percentages, which give the relative size of each group who provide unpaid care in relation to the total population size of Rotherham of each ethnic group. A larger value means that a particular ethnic group has a larger share of people who reported that they provide unpaid care. Each of the 19 ethnic groups are presented on the vertical side of the graph (y-axis), with their percentage values on the horizontal side (x-axis). As bars extend further to the right hand side, that particular ethnic group has more people who reported that they provide unpaid care. Only data for Rotherham are presented.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Create Rotheram dataset
+care <- fread("./Census data/LADs/ethnicity_care.csv") # Load data
+care_roth <- care[care$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+care_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+care_roth$Ethnicity[care_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+care_roth$Ethnicity[care_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+care_roth$Ethnicity[care_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+care_roth <- care_roth[care_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(care_roth, old = c("Unpaid care (5 categories)"), new = c("Unpaid_care")) # Rename variable for ease of use
+care_roth <- care_roth[care_roth$Unpaid_care != "Does not apply"] # Delete as not required (unknown)
+eth_size_r <- care_roth[, list(population = sum(Observation)), by = "Ethnicity"] # Get ethnic group population size so can calculate percentages later
+care_roth <- merge(care_roth, eth_size_r, by = "Ethnicity", all.x = TRUE) # Join on population size
+care_roth$Percentage <- round(((care_roth$Observation / care_roth$population) * 100), 1) # Create percentage of total population measure
+care_roth <- care_roth[, c("Ethnicity", "Unpaid_care", "Percentage")] # Keep only columns needed
+care_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Plot just Rotherham data
+plot12 <- ggplot(care_roth[care_roth$Unpaid_care != "Provides no unpaid care"], aes(x = Percentage, y = Ethnicity, fill = Unpaid_care)) + # Plot population percentage for ethnic groups
+    geom_bar(stat = "identity") +
+    scale_fill_viridis_d(option = "A", begin = 0.1, end = 0.9) + # Colour-blind friendly
+    labs(fill = "Unpaid care") + # Edit legend
+    theme(legend.position="bottom") + # Place legend at bottom
+    guides(fill=guide_legend(nrow=3, direction = "vertical")) # Place legend over two rows
+plot12 # Print plot
+
+```
+**Figure 11: Provision of unpaid care by ethnic group for Rotherham, 2021**
+
+*Highlights from Figure 11:* The White British and White Irish groups have the highest levels of unpaid care, although this may be partly explained by these groups being, on average, older populations. The lowest levels of unpaid care provision are provided by the Bangladeshi and Other Black ethnic groups, with lower levels also provided by Indian and Chinese ethnic groups.
+
+We show how these data vary by age group in Section 9.6 of the Appendix. These data show that provision of care increases with age. While there are differences by ethnic group, these are not always consistent or explainable.  
+
+## Levels of reported hate crime
+
+It is difficult to investigate racially aggravated crimes for Rotherham. This is because data on offences are collected at a larger police force area (South Yorkshire here) and no information is provided at a smaller scale. Figure 12 below presents trends of racially aggravated crimes for South Yorkshire over the past 10 years.
+
+*How to interpret the graph:* The graph presents a line which represents the yearly values (total number of racially aggravated crimes). Where the line is higher, there were more crimes in a year. 
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+## Load data
+sheet_names <- paste0(2012:2023, "_", 13:24) # Store all sheet names
+all_data <- list() # Create an empty list for storing data
+
+# Loop through each sheet
+for (sheet in sheet_names) {
+  data <- read_ods(path = "./Other data/crime_data.ods", sheet = sheet) # Load sheet
+  southyorks <- data[data$`Force Name` == "South Yorkshire",] # Subset South Yorkshire police force
+  all_data[[sheet]] <- southyorks  # Store data in the list
+}
+
+# Combine into a data frame
+combined_data <- do.call(rbind, all_data)
+rm(all_data, data) # Tidy
+
+# Subset only racially aggravated crimes
+combined_data$crime_short <- substr(combined_data$`Offence Description`, 1, 8) # Create new variable that captures all hate crimes since they unique always start with "racially"
+hate_crimes <- combined_data[combined_data$crime_short == "Racially",] # Subset
+rm(combined_data)
+
+# Aggregate to years (as in quarters)
+hate_crimes <- as.data.table(hate_crimes) # Convert for next step
+hate_crimes <- hate_crimes[, list(`Number of Offences` = sum(`Number of Offences`)), by = "Financial Year"] # Sum the totals per year
+
+# Plot trend
+plot <- ggplot(hate_crimes, aes(x = `Financial Year`, y = `Number of Offences`, group = 1)) + # Data to be plotted
+  geom_line(linewidth = 1.2) + # Plot line graph
+  ylim(0, 2100) + # Define extent of plot
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Print x-axis labels at a 45 degree angle
+plot
+
+```
+**Figure 12: Total number of racially aggravated offences reported in South Yorkshire, 2012/13 to 2023/24**
+
+*Highlights from Figure 12:* Racially aggravated crimes in South Yorkshire have increased from 433 in 2012/13 to 2050 in 2023/24 - more than quadrupling between 2012/13 and 2021/22 before levelling out afterwards. There are two years with high annual increases that stand out. 2016/17 saw the largest relative increase with a 61% increase in racially aggravated crimes (increasing from 608 to 979), related to the EU referendum. 2021/22 saw the largest absolute increase from 1594 to 2043 (28% increase), related to general social pressures relating to the pandemic.
+
+South Yorkshire lies in the [top 10 profile force areas](https://commonslibrary.parliament.uk/hate-crimes-what-do-the-stats-show/) in England for race hate crimes. You can find out more about national trends in hate crimes [here](https://www.gov.uk/government/statistics/hate-crime-england-and-wales-2022-to-2023/hate-crime-england-and-wales-2022-to-2023).
+
+# Data silences
+
+The report ends by outlining a series of gaps in available data that limit our ability to fully investigate the unequal experiences of ethnicity and ageing. Specifically, we identified the following issues:
+
+-   *Need for more granular hate crime statistics:* There were a lack of small area or neighbourhood statistics on racially aggravated hate crime. This limits our ability to examine which communities are exposed to such crimes. Aggregated statistics were available, but the police force area is too large to provide more granular insights. There were also no disaggregation for South Yorkshire on which ethnic groups are affected the most either.
+-   *Lack of intersectional perspective:* Census data are aggregated or area based. To preserve data security, they are often only provided for one or two categories of investigation (e.g., age group and ethnic group). They do not facilitate an intersectional perspective that explores experiences on the holistic social identities that we have (e.g., combinations of age group, sex, ethnic group, social class, religion etc). This would allow us to investigate the axes of inequalities in more detail.
+-   *Limited measures of inclusion or exclusion:* Census data focus on economic and health outcomes. This is at the expense of other social outcomes that may be relevant, such as community engagement, social support groups, and loneliness which have all been raised as key in our voice forums. An over-reliance on Census data may present a narrow picture of inclusion and exclusion.
+
+# Acknowledgements
+
+This work was supported by the Economic and Social Research Council (grant number ES/W012383/1). You can read more about the 'Ethnicity and Unequal Ageing' project on our [website](https://www.ethnicityandunequalageing.ac.uk/). All of the R and Python code to recreate this report and the online dashboard can be found on [here](https://github.com/markagreen/unequal_ageing_dashboard). 
+
+# Contact
+
+This report was written by Professor Mark A. Green (University of Liverpool), Dr Helena M. Constante (University of Sheffield), Dr Daniel Holman (University of Sheffield), and Professor Matthew Bennett (University of Birmingham).
+
+If you have any questions about this report, please get in contact with the following:
+
+Professor Mark Green. Address: Department of Geography and Planning, University of Liverpool, Liverpool, L69 7ZT, UK. Email: mark.green@liverpool.ac.uk
+
+# Appendix
+
+The appendix contains additional graphs that may be useful to supplement the main narrative of the report. 
+
+## Comparison of age groups across ethnicities in Rotherham between 2011 and 2021 Census
+
+Here we consider how changes in population structure differ across different ethnic groups. This presents a lot of information that can be difficult and complicated to visualise in a clear way. To keep this simple, we have elected to reduce the amount of information presented to focus just on the oldest four age groups as to describe how the population is ageing.
+
+*How to interpret the graph:* The graph presents change in the total population size of each ethnic group across four age groups between 2011 and 2021. It presents the absolute change in values, which subtracts the 2021 population size of a group from the 2011 population size. The plot are divided by each age group to allow us to look at them separately. Ethnic group is presented on the vertical (y-axis). As the bars extend further to the right hand side (in relation to a value of 0), a particular ethnic group has increased in size since 2011 (with the change described as the number of people change). Where bars extend more to the left hand side, they have decreased in size between censuses. Only data for Rotherham are displayed here. The values for the White British groups have been removed since they distort the plot due to being a far larger population size.
+
+```{r message=FALSE, warning=FALSE, fig.width = 6.3, fig.height = 5.1}
+# Load and tidy data
+age11 <- fread("./Census data/2011 data/ethnicity_age.csv")
+age11 <- age11[age11$name == "Rotherham"] # Subset areas needed
+age11[, age_clean := gsub("Age ", "", Age)] # Get rid of aged part to match
+age11$Total <- NULL # Drop as not needed
+age11$Age <- NULL # Drop as not needed
+age11$code <- NULL # Drop as not needed
+
+# Convert to long format
+age11_long <- melt(age11, # Object to reshape
+                id.vars = c("name", "age_clean"), # Columns to keep 
+                variable.name = "Ethnicity", # Name of the new variable for ethnic group
+                value.name = "Observation") # Name of the new variable for the values (counts)
+
+# Tidy the ethnic group variable
+age11_long[, Ethnicity := gsub(".*: ", "", `Ethnicity`)] # Create shorter name for ethnic group
+age11_long$Ethnicity <- as.character(age11_long$Ethnicity) # Convert as stored as a factor - helps next step
+age11_long$Ethnicity[age11_long$Ethnicity == "English/Welsh/Scottish/Northern Irish/British"] <- "White British" # Rename descriptor to shorter name to help presentation
+age11_long$Ethnicity[age11_long$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+age11_long$Ethnicity[age11_long$Ethnicity == "Irish"] <- "White Irish" # Repeat
+age11_long <- age11_long[age11_long$Ethnicity != "Does not apply"] # Delete as not required
+
+# Join datasets together
+setnames(age_roth, old = c("Extent"), new = c("name")) # Rename variable for ease of use
+age_roth <- age_roth[, c(1, 3, 5, 6)] # Subset columns so matches above
+age_roth2 <- merge(age_roth, age11_long, by = c("age_clean", "name", "Ethnicity"), all.x = TRUE) # Join together
+
+# Convert age to a factor with correct order
+age_roth2$age_clean <- factor(age_roth2$age_clean, 
+                              levels = c("4 and under", "5 to 9", "10 to 14", "15 to 19", "20 to 24", 
+                                         "25 to 29", "30 to 34", "35 to 39", "40 to 44", "45 to 49", 
+                                         "50 to 54", "55 to 59", "60 to 64", "65 to 69", "70 to 74", 
+                                         "75 to 79", "80 to 84", "85 and over"))
+
+# Plot
+age_roth2$change <- round((age_roth2$Observation.x / age_roth2$Observation.y - 1) * 100, 1) # Calculate relative change in percentage terms
+age_roth2$change2 <- round((age_roth2$Observation.x - age_roth2$Observation.y), 1) # Calculate relative change in absolute terms
+# plot6 <- ggplot(age_roth2[age_roth2$Ethnicity != "Roma" & age_roth2$Ethnicity != "Other Mixed Ethnicity"], aes(x = change, y = age_clean)) + # Plot population percentage for ethnic groups
+#     geom_bar(stat = "identity", position = "dodge") + # Use bar charts and dodge to keep separate
+#     facet_wrap(~Ethnicity, labeller = label_wrap_gen(width = 15), scales = "free") + # Split plot by ethnic group
+#     scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+#     labs(y = "Age Band", x = "Change in population size (number of persons) between 2021 and 2011", fill = "Location") +
+#     theme(axis.text=element_text(size=7))
+# plot6 # Print plot
+plot6 <- ggplot(age_roth2[age_roth2$Ethnicity != "Roma" & age_roth2$Ethnicity != "Other Mixed Ethnicity" & age_roth2$Ethnicity != "White British" & (age_roth2$age_clean == "85 and over" | age_roth2$age_clean == "80 to 84" | age_roth2$age_clean == "70 to 74" | age_roth2$age_clean == "75 to 79")], aes(x = change2, y = Ethnicity)) + # Plot population percentage for ethnic groups
+    geom_bar(stat = "identity", position = "dodge") + # Use bar charts and dodge to keep separate
+    facet_wrap(~age_clean, scales = "fixed") + # Split plot by ethnic group
+    scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+    labs(y = "Age Band", x = "Change in population size (number of persons) between 2021 and 2011", fill = "Location") +
+    theme(axis.text=element_text(size=7))
+plot6
+
+
+```
+**Figure A1: Population size change in population size between 2021 and 2011 by age band and ethnic group for Rotherham, 2021**
+
+*Highlights from Figure A1:* For most ethnic groups, they have increased in size among the oldest age groups meaning that our oldest adults are becoming more diverse. The extent of the change is small (with the largest increase only being 20 people). There has been some decreases, especially in the White Irish and Pakistani groups.
+
+## Distribution of housing tenure by age across ethnicities
+
+Here we considered how housing tenure differs by age for each ethnic group. Figure 9 below presents the percentage of households within each housing tenure status by age group for the 19 ethnic groups. Due to data security, we were unable to present more granular age groups.
+
+*How to interpret the graph:* The line graph presents the percentage of each ethnic group by housing tenure for each age group. For example, the values for 'Black African' and '65+' give the percentage of people aged 65 years and over, who reported their ethnicity as 'Black African', by each housing tenure option. As the lines go further to the right hand side, age increases. As lines increase vertically, there is a larger proportion captured within a housing tenure status. Note that no values are presented for the Chinese group in age group '<25 years' as the ONS have redacted these data due to small numbers to preserve statistical disclosure. 
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Create Rotheram dataset
+ten <- fread("./Census data/LADs/ethnicity_age_tenure.csv") # Load data
+ten_roth <- ten[ten$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+ten_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+ten_roth$Ethnicity[ten_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+ten_roth$Ethnicity[ten_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+ten_roth$Ethnicity[ten_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+ten_roth <- ten_roth[ten_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(ten_roth, old = c("Tenure of household (5 categories)"), new = c("Tenure")) # Rename variable for ease of use
+ten_roth$Tenure[ten_roth$Tenure == "Owned: Owns outright"] <- "Owned outright" # Now rename tenure descriptors
+ten_roth$Tenure[ten_roth$Tenure == "Owned: Owns with a mortgage or loan or shared ownership"] <- "Owned with mortgage" # Repeat for each
+ten_roth$Tenure[ten_roth$Tenure == "Rented: Social rented"] <- "Social rented" # Repeat for each
+ten_roth$Tenure[ten_roth$Tenure == "Private rented or lives rent free"] <- "Private rented or rent free" # Repeat for each
+ten_roth <- ten_roth[ten_roth$Tenure != "Does not apply"] # Delete as not required
+setnames(ten_roth, old = c("Age (C) (5 categories)"), new = c("Age Group")) # Rename variable for ease of use
+eth_size_r <- ten_roth[, list(population = sum(Observation)), by = c("Ethnicity", "Age Group")] # Get ethnic group population size so can calculate percentages later
+ten_roth <- merge(ten_roth, eth_size_r, by = c("Ethnicity", "Age Group"), all.x = TRUE) # Join on population size
+ten_roth$Percentage <- round(((ten_roth$Observation / ten_roth$population) * 100), 1) # Create percentage of total population measure
+ten_roth <- ten_roth[, c("Age Group", "Ethnicity", "Tenure", "Percentage")] # Keep only columns needed
+ten_roth$Extent <- "Rotherham" # Create column for plotting purpose
+ten_roth$`Age Group`[ten_roth$`Age Group` == "Aged 24 years and under"] <- "<25" # Revise age group labels
+ten_roth$`Age Group`[ten_roth$`Age Group` == "Aged 25 to 34 years"] <- "25-34" # Repeat for each...
+ten_roth$`Age Group`[ten_roth$`Age Group` == "Aged 35 to 49 years"] <- "35-49" # Repeat for each...
+ten_roth$`Age Group`[ten_roth$`Age Group` == "Aged 50 to 64 years"] <- "50-64" # Repeat for each...
+ten_roth$`Age Group`[ten_roth$`Age Group` == "Aged 65 years and over"] <- "65+" # Repeat for each...
+
+# Plot
+plot8 <- ggplot(ten_roth, aes(x = `Age Group`, y = Percentage, group = Tenure, color = Tenure)) + # Plot population percentage 
+  geom_line(stat = "identity") + # Use bar charts and wrap labels so not all lost
+  facet_wrap(~Ethnicity, labeller = label_wrap_gen(width = 15)) + # Plot each ethnic group separately
+  scale_color_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  theme(axis.text.x = element_text(angle = 80, hjust = 1), # Rotate x-axis labels to improve presentation
+    strip.text = element_text(size = 8)) + # Adjust size of facet labels
+  labs(caption = "Note: Some values have been suppressed due to low counts.") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(direction = "vertical")) # Edit legend title to the top rather than side
+plot8 # Print plot
+
+```
+**Figure A2: Percentage of ethnic group population by age group and housing tenure for Rotherham, 2021**
+
+*Highlights from Figure A2:* A general trend of increasing ownership with increasing age consistently across most ethnic groups is observed. The is observed first with an inverse 'u' shaped distribution for 'owned with mortgage' (green line), which increases at first and then falls reflecting people paying off their mortgage later in life. This is then replaced by increasing 'owned outright' (blue line) in the older age groups. The extent of home ownership varies by ethnic group, although the broad trend is consistent otherwise. Some ethnic groups reach the oldest age group, 65 years and over, with a far higher proportion of owned outright (e.g., Indian, Bangladeshi, Chinese) than compared to other groups (e.g., Black African, Other Black, White and Black Caribbean).
+
+There are some exceptions to this trend. The Roma population are over-represented in the group 'private rented or rent free' for most of their lives, before it declines substantially in age group 65 years and over where people transition into either 'social rented' or 'owned outright'. The Black African, Other Black and Arab communities also have a high proportion in 'social rented' housing prior to 65 years.
+
+## Distribution of qualifications by age groups across ethnicities
+
+It is plausible that educational attainment differences by ethnic group may vary across different age groups (and generations). We explored this in the next graph.
+
+*How to interpret the graph:* The stacked bar plot presents the percentage of each ethnic group by the highest level of qualifications achieved. Each category adds up to 100%. Where a bar is larger in size, it shows that a particular ethnic group is more represented in a particular qualification level. The values are proportions based on the ethnic group totals. Data are presented for broad age groups separately. Only data for Rotherham in 2021 are presented. Data for Roma aged 75 years and over are not possible due to statistical disclosure issues following small numbers.  
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Create Rotheram dataset
+edu <- fread("./Census data/LADs/ethnicity_age_qual.csv") # Load data
+edu_roth <- edu[edu$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+edu_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+edu_roth$Ethnicity[edu_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+edu_roth$Ethnicity[edu_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+edu_roth$Ethnicity[edu_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+edu_roth <- edu_roth[edu_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(edu_roth, old = c("Highest level of qualification (7 categories) Code"), new = c("Education")) # Rename variable for ease of use
+edu_roth <- edu_roth[edu_roth$Education != -8] # Delete as not required (unknown)
+eth_size_r <- edu_roth[, list(population = sum(Observation)), by = c("Ethnicity", "Age (D) (8 categories)")] # Get ethnic group population size so can calculate percentages later
+edu_roth <- merge(edu_roth, eth_size_r, by = c("Ethnicity", "Age (D) (8 categories)"), all.x = TRUE) # Join on population size
+edu_roth$Percentage <- round(((edu_roth$Observation / edu_roth$population) * 100), 1) # Create percentage of total population measure
+#edu_roth <- edu_roth[, c("Ethnicity", "Education", "Percentage")] # Keep only columns needed
+#edu_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert Education to a factor with new labels
+edu_roth$Education2 <- factor(edu_roth$Education, 
+                              levels = 0:5, 
+                              labels = c("No qualifications", "Level 1", "Level 2", 
+                                        "Level 3", "Level 4+", "Other"))
+
+
+# Plot just Rotherham data
+plot9 <- ggplot(edu_roth[edu_roth$`Age (D) (8 categories)` != "Aged 15 years and under"], aes(x = Percentage, y = Ethnicity, fill = Education2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  facet_wrap(~`Age (D) (8 categories)`) +
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(fill= "Education") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow = 2, direction = "vertical")) # Edit legend title to the top rather than side and place over two rows
+plot9 # Print plot
+
+
+```
+**Figure A3: Percentage of ethnic group population by highest qualification and age group for Rotherham, 2021**
+
+*Highlights from Figure A3:* In the youngest age group, individuals are more likely to have the lower levels of qualifications reflecting that many of the people captured here will have yet to complete their formal education. The percentage of people in each ethnic group with no qualifications is low for most ethnic groups in the younger age groups, and more common in the older age groups (including the majority of people aged 75 years and over). The exceptions to this are for Roma, Gypsy or Irish Traveller, and any other ethnic group who have elevated levels of people with no qualifications for most age groups. Percentage of level 4+ qualifications remain relatively consistent in extent between ages 25 and 54 years, falling thereafter consistently by ethnic group. In ages 54 to 74, level 4+ qualifications are lower in the White British groups than compared to most other ethnic groups. Some groups have ~50% of people with level 4+ qualifications at all age groups, especially Indian (greater than 75% in ages 25 to 44 years) and Bangladeshi groups. 
+
+## Distribution of economic activity by age groups across ethnicities
+
+*How to interpret the graph:* The stacked bar plot presents the percentage of each ethnic group by each marker of their main economic activity status. Each category adds up to 100%. Where a bar is larger in size, it shows that a particular ethnic group is more represented in a particular type of economic activity. The values are proportions based on the ethnic group totals. Plots are presented for individual age groups. Only data for Rotherham in 2021 are presented. Data for Roma aged 75 years and over are not possible due to statistical disclosure issues following small numbers.  
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Create Rotheram dataset
+econ <- fread("./Census data/LADs/ethnicity_age_econoact.csv") # Load data
+econ_roth <- econ[econ$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+econ_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+econ_roth$Ethnicity[econ_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+econ_roth$Ethnicity[econ_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+econ_roth$Ethnicity[econ_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+econ_roth <- econ_roth[econ_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(econ_roth, old = c("Economic activity status (12 categories) Code"), new = c("Economic_activity")) # Rename variable for ease of use
+econ_roth <- econ_roth[econ_roth$Economic_activity != -8] # Delete as not required (unknown)
+eth_size_r <- econ_roth[, list(population = sum(Observation)), by = c("Ethnicity", "Age (D) (8 categories)")] # Get ethnic group population size so can calculate percentages later
+econ_roth <- merge(econ_roth, eth_size_r, by = c("Ethnicity", "Age (D) (8 categories)"), all.x = TRUE) # Join on population size
+econ_roth$Percentage <- round(((econ_roth$Observation / econ_roth$population) * 100), 1) # Create percentage of total population measure
+#econ_roth <- econ_roth[, c("Ethnicity", "Economic_activity", "Percentage")] # Keep only columns needed
+#econ_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert a factor with new labels
+econ_roth$Economic_activity2 <- factor(econ_roth$Economic_activity, 
+                              levels = 1:11, 
+                              labels = c("Employed", "Self-employed (with employees)", "Self-employed (no employees)", 
+                                        "Unemployed", "Economically active student working", "Economically active student seeking work", "Retired", "Economically inactive student", "Looking after home or family", "Long-term sick or disabled", "Other"))
+
+
+# Plot just Rotherham data
+plot10 <- ggplot(econ_roth[econ_roth$`Age (D) (8 categories)` != "Aged 15 years and under"], aes(x = Percentage, y = Ethnicity, fill = Economic_activity2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  facet_wrap(~`Age (D) (8 categories)`) +
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(fill= "Economic activity status") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow=4, direction = "vertical")) # Place legend over four rows 
+plot10 # Print plot
+
+```
+**Figure A4: Percentage of ethnic group population by economic activity and age group for Rotherham, 2021**
+
+*Highlights from Figure A4:* In the youngest age group (16 to 24 years), the majority of people are classified as 'economically inactive student' which reflects higher levels of people in education in these ages. Lowest levels of people who are students in education are witnessed in Gypsy or Irish Traveller, Roma and Black Caribbean groups. In contrast, some groups have lower levels of employment (e.g., Bangladeshi). In the immediate age groups after this one, employment dominates most age groups although remains lower in the Roma and Gypsy or Irish Traveller groups consistently across most ages. Employment falls in ages 55 to 64 years, replaced by increases in people reporting that they were 'long-term sick or disabled' or 'retired'. By ages 65 to 74 (and continuing into aged 75 years and over), the majority of each ethnic group is retired. However, some ethnic groups have higher levels of people aged 65 to 74 years employed (e.g., Black Caribbean and Black African). 
+
+## Distribution of type of employment by age groups across ethnicities
+
+We next investigated how NS-SeC varied by age group to explore how types of work differ across the life course by ethnic group. 
+
+*How to interpret the graph:* The stacked bar plot presents the percentage of each ethnic group by each NS-SeC category. Each category adds up to 100%. Where a bar is larger in size, it shows that a particular ethnic group is more represented in a particular group. The values are proportions based on the ethnic group totals. Individual plots are presented by age group. We have removed ages 65 years and over, since Figure 13 showed that most people are retired and these plots do not add much here. Only data for Rotherham in 2021 are presented. 
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Create Rotheram dataset
+nssec <- fread("./Census data/LADs/ethnicity_age_nnsec.csv") # Load data
+nssec_roth <- nssec[nssec$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+nssec_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+nssec_roth$Ethnicity[nssec_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+nssec_roth <- nssec_roth[nssec_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(nssec_roth, old = c("National Statistics Socio-economic Classification (NS-SeC) (10 categories) Code"), new = c("NSSeC")) # Rename variable for ease of use
+nssec_roth <- nssec_roth[nssec_roth$NSSeC != -8] # Delete as not required (unknown)
+eth_size_r <- nssec_roth[, list(population = sum(Observation)), by = c("Ethnicity", "Age (D) (8 categories)")] # Get ethnic group population size so can calculate percentages later
+nssec_roth <- merge(nssec_roth, eth_size_r, by = c("Ethnicity", "Age (D) (8 categories)"), all.x = TRUE) # Join on population size
+nssec_roth$Percentage <- round(((nssec_roth$Observation / nssec_roth$population) * 100), 1) # Create percentage of total population measure
+#nssec_roth <- nssec_roth[, c("Ethnicity", "NSSeC", "Percentage")] # Keep only columns needed
+#nssec_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Convert a factor with new labels
+nssec_roth$nssec2 <- factor(nssec_roth$NSSeC, 
+                              levels = 1:9, 
+                              labels = c("Higher managers", "Lower managers", "Intermediate", 
+                                        "Small employers", "Lower supervisory and technical", "Semi-routine", "Routine", "Never worked and long-term unemployed", "Full-time students"))
+
+# Plot just Rotherham data
+plot11 <- ggplot(nssec_roth[nssec_roth$`Age (D) (8 categories)` != "Aged 15 years and under" & nssec_roth$`Age (D) (8 categories)` != "Aged 65 to 74 years" & nssec_roth$`Age (D) (8 categories)` != "Aged 75 years and over"], aes(x = Percentage, y = Ethnicity, fill = nssec2)) + # Plot population percentage for ethnic groups
+  geom_bar(stat = "identity") + # Use bar charts
+  facet_wrap(~`Age (D) (8 categories)`) +
+  xlim(0, 101) +
+  scale_fill_viridis_d(option = "H", begin = 0.1, end = 0.9) + # Colour-blind friendly
+  labs(fill= "NS-SeC group") + # Add plot title
+  theme(legend.position="bottom") + # Place legend at bottom
+  guides(fill=guide_legend(nrow=3, direction = "vertical")) # Place legend over two rows 
+plot11 # Print plot
+
+```
+**Figure A5: Percentage of ethnic group population by National Statistics Socio-economic Classification (NS-SeC) for Rotherham, 2021**
+
+*Highlights from Figure A5:* FIn the 16 to 24 years age group, the majority of people in most ethnic groups reported that they are full time students other. The exception to this is for the Roma or Gypsy or Irish Traveller groups who have lower values. Both of these groups have higher levels of people who reported 'never worked and long-term unemployed' and 'routine' and this is consistent across all age-groups, but highest in the 45 to 64 years. If we focus on the people in the higher and lower manager groups, these are consistently higher in the White Irish, White British, Indian, Chinese, Caribbean, and Bangladeshi groups. 
+
+## Provision of unpaid care distribution by age across ethnicities
+
+Provision of unpaid care also varies with age that may explain the patterns observed above. In the next graph, we extend the same data but split it out by broad age band. 
+
+*How to interpret the graph:* Data being plotted are percentages, which give the relative size of each group who provide unpaid care in relation to the total population size of Rotherham of each ethnic group. A larger value means that a particular ethnic group has a larger share of people who reported that they provide unpaid care. Each of the 19 ethnic groups are presented on the vertical side of the graph (y-axis), with their percentage values on the horizontal side (x-axis). As bars extend further to the right hand side, that particular ethnic group has more people who reported that they provide unpaid care. Only data for Rotherham are presented. Individual plots are given by age group. Please note that some observations have been redacted due to statistical disclosure control (so where the bar is missing, this does not mean no-one provides any care it is just the data cannot be shared).
+
+```{r message=FALSE, warning=FALSE, fig.width = 10, fig.height = 10}
+# Create Rotheram dataset
+care <- fread("./Census data/LADs/ethnicity_age_care.csv") # Load data
+care_roth <- care[care$`Lower tier local authorities` == "Rotherham"] # Subset Rotherham
+care_roth[, Ethnicity := gsub(".*: ", "", `Ethnic group (20 categories)`)] # Create shorter name for ethnic group
+care_roth$Ethnicity[care_roth$Ethnicity == "English, Welsh, Scottish, Northern Irish or British"] <- "White British" # Rename descriptor to shorter name to help presentation
+care_roth$Ethnicity[care_roth$Ethnicity == "Other Mixed or Multiple ethnic groups"] <- "Other Mixed Ethnicity" # Repeat
+care_roth$Ethnicity[care_roth$Ethnicity == "Irish"] <- "White Irish" # Repeat
+care_roth <- care_roth[care_roth$Ethnicity != "Does not apply"] # Delete as not required
+setnames(care_roth, old = c("Unpaid care (5 categories)"), new = c("Unpaid_care")) # Rename variable for ease of use
+care_roth <- care_roth[care_roth$Unpaid_care != "Does not apply"] # Delete as not required (unknown)
+eth_size_r <- care_roth[, list(population = sum(Observation)), by = c("Ethnicity", "Age (D) (8 categories)")] # Get ethnic group population size so can calculate percentages later
+care_roth <- merge(care_roth, eth_size_r, by = c("Ethnicity", "Age (D) (8 categories)"), all.x = TRUE) # Join on population size
+care_roth$Percentage <- round(((care_roth$Observation / care_roth$population) * 100), 1) # Create percentage of total population measure
+#care_roth <- care_roth[, c("Ethnicity", "Unpaid_care", "Percentage")] # Keep only columns needed
+#care_roth$Extent <- "Rotherham" # Create column for plotting purpose
+
+# Plot just Rotherham data
+plot12 <- ggplot(care_roth[care_roth$Unpaid_care != "Provides no unpaid care"], aes(x = Percentage, y = Ethnicity, fill = Unpaid_care)) + # Plot population percentage for ethnic groups
+    geom_bar(stat = "identity") + # Bar plot
+    facet_wrap(~`Age (D) (8 categories)`) + # Split plot by age group
+    labs(fill = "Unpaid care") + # Edit legend
+    scale_fill_viridis_d(option = "A", begin = 0.1, end = 0.9) + # Colour-blind friendly
+    theme(legend.position="bottom") + # Place legend at bottom
+    guides(fill=guide_legend(nrow=2, direction = "vertical")) # Place legend over two rows
+plot12 # Print plot
+
+```
+**Figure A6: Provision of unpaid care by ethnic group and age group for Rotherham, 2021**
+
+*Highlights from Figure A6:* Provision of unpaid care is larger in the older age groups generally. There are ethnic inequalities in which groups provide more care than others. The Roma and Gypsy or Irish Traveller ethnic groups have higher values for most age groups (where data can be disclosed). There are also higher levels of care being provided from people in mixed ethnicity groups (especially 'other mixed ethnicity' in 65 years and over). Lower values for the provision of care are observed in people from Chinese, Indian and Bangladeshi ethnic groups. Lower levels does not mean that groups are refusing to provide unpaid care, but likely that there is less need for it. 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+# Tidy up R environment
+rm(list = ls()) # Remove all objects
+
+```
